@@ -152,7 +152,7 @@ def ShowUsers():
                 for group in user.groups:
                     print("\t{}".format(group))
         elif inp == "a":
-            #AddUser()
+            AddUser()
             continue
         elif inp == "d":
             #DeleteUser()
@@ -163,6 +163,34 @@ def ShowUsers():
             exit()
         else:
             print("Wrong input. Try again")
+
+def AddUser():
+    while True:
+        print("To cancel adding a user type 0 at any stage")
+        name = input("Name: ")
+        if name == "0":
+            return
+        surname = input("Surname: ")
+        if surname == "0":
+            return
+        username = input("Username: ")
+        if username == "0":
+            return
+        email = input("Email: ")
+        if email == "0":
+            return
+        print("Confirm data: {0} {1}, {2}, {3}".format(name, surname, username, email))
+        while True:
+            inp = input("Type 1 if you want to confirm data, 2 if you want to enter it again or 0 if you want to cancel whole action")
+            if inp == "1":
+                User(name, surname, username, email)
+                return
+            elif inp == "2":
+                break
+            elif inp == "0":
+                return
+            else:
+                print("Wrong input. Try again")
 
 while True:
     print("----------------------------------------------------------------")
