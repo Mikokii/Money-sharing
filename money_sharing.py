@@ -62,6 +62,7 @@ def ShowGroups():
             group = list_groups[i]
             print("({0}) {1}".format(i, group.name))
         print("(a) Add new group")
+        print("(d) Delete existing group")
         print("(m) Exit to main manu")
         print("(e) Exit app")
         inp = input()
@@ -77,6 +78,9 @@ def ShowGroups():
         elif inp == "a":
             AddGroup()
             continue
+        elif inp == "d":
+            DeleteGroup()
+            continue
         elif inp == "m":
             break
         elif inp == "e":
@@ -88,7 +92,30 @@ def AddGroup():
     name = input("Name of group: ")
     Group(name)
 
-
+def DeleteGroup():
+    if len(list_groups) == 0:
+        print("No groups to delete")
+        return
+    while True:
+        print("Choose group to delete")
+        for i in range(len(list_groups)):
+            group = list_groups[i]
+            print("({0}) {1}".format(i, group.name))
+        print("(c) Cancel action")
+        inp = input()
+        try:
+            inp = int(inp)
+        except:
+            pass
+        if type(inp) == int and inp >= 0 and inp < len(list_groups):
+            group = list_groups.pop(inp)
+            print("Deleted group: \"{}\"".format(group.name))
+            del group
+            return
+        elif inp == "c":
+            return
+        else:
+            print("Wrong input. Try again")
 
 while True:
     print("----------------------------------------------------------------")
