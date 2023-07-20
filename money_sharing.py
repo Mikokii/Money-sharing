@@ -7,7 +7,13 @@ class User:
         self.surname = surname
         self.username = username
         self.email = email
+        list_users.append(self)
         self.groups = []
+    def CalculateBalance(self):
+        self._balance = 0
+        for group in self.groups:
+            self._balance += group.members[self]
+        return self._balance
 class Group:
     def __init__(self, name):
         self.name = name
@@ -54,10 +60,11 @@ class Expense:
     #uneqally by value
 
 list_groups = []
+list_users = []
 
 def ShowGroups():
     while True:
-        print("Type according number to acces group or do another action")
+        print("Type according number to access group or do another action")
         for i in range(len(list_groups)):
             group = list_groups[i]
             print("({0}) {1}".format(i, group.name))
@@ -117,6 +124,46 @@ def DeleteGroup():
         else:
             print("Wrong input. Try again")
 
+def ShowUsers():
+    while True:
+        print("Type according number to access specific information about user")
+        for i in range(len(list_users)):
+            user = list_users[i]
+            print("({0}) {1} {2}".format(i, user.name, user.surname))
+        print("(a) Add new user")
+        print("(d) Delete existing user")
+        print("(m) Exit to main manu")
+        print("(e) Exit app")
+        inp = input()
+        try:
+            inp = int(inp)
+        except:
+            pass
+        if type(inp) == int and inp >= 0 and inp < len(list_users):
+            user = list_users[inp]
+            print("Name: {0} {1}".format(user.name, user.surname))
+            print("Username: {}".format(user.username))
+            print("Email: {}".format(user.email))
+            print("Balance: {}".format(user.CalculateBalance()))
+            if len(user.groups) == 0:
+                print("Not member of any groups")
+            else:
+                print("Groups: ")
+                for group in user.groups:
+                    print("\t{}".format(group))
+        elif inp == "a":
+            #AddUser()
+            continue
+        elif inp == "d":
+            #DeleteUser()
+            continue
+        elif inp == "m":
+            break
+        elif inp == "e":
+            exit()
+        else:
+            print("Wrong input. Try again")
+
 while True:
     print("----------------------------------------------------------------")
     print("Type according number")
@@ -127,8 +174,7 @@ while True:
     if inp == "1":
         ShowGroups()
     elif inp == "2":
-        pass
-        #ShowUsers()
+        ShowUsers()
     elif inp == "3":
         exit()
     else:
