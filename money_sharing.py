@@ -1,6 +1,5 @@
 from collections import OrderedDict
 import random
-
 class User:
     def __init__(self, name, surname, username, email):
         self.name = name
@@ -38,7 +37,6 @@ class Group:
                 index_member = list(self.members).index(mem)
                 self.matrix[index][index_member] -= round(expense.members[mem],2)
                 self.matrix[index_member][index] += round(expense.members[mem],2)
-
 class Expense:
     def __init__(self, name, value, currency, payer, members, type):
         self.name = name
@@ -58,9 +56,7 @@ class Expense:
     #equally
     #uneqally by percentage
     #uneqally by value
-
-list_groups = []
-list_users = []
+    #unequally by shares
 
 def ShowGroups():
     while True:
@@ -131,7 +127,7 @@ def ShowUsers():
             user = list_users[i]
             print("({0}) {1} {2}".format(i, user.name, user.surname))
         print("(a) Add new user")
-        print("(d) Delete existing user")
+        print("(d) Delete existing settled user")
         print("(m) Exit to main manu")
         print("(e) Exit app")
         inp = input()
@@ -155,7 +151,7 @@ def ShowUsers():
             AddUser()
             continue
         elif inp == "d":
-            #DeleteUser()
+            DeleteUser()
             continue
         elif inp == "m":
             break
@@ -191,6 +187,42 @@ def AddUser():
                 return
             else:
                 print("Wrong input. Try again")
+    
+def DeleteUser():
+    if len(list_users) == 0:
+        print("No users to delete")
+        return
+    while True:
+        print("Choose user to delete (showing only users settled in all groups): ")
+        settled_users = []
+        for i in range(len(list_users)):
+            user = list_users[i]
+            if user.CalculateBalance() == 0:
+                settled_users.append(user)
+        if len(settled_users) == 0:
+            print("No settled users")
+            return
+        for i in range(len(settled_users)):
+            user = settled_users[i]
+            print("({0}) {1} {2}".format(i, user.name, user.surname))
+        print("(c) Cancel action")
+        inp = input()
+        try:
+            inp = int(inp)
+        except:
+            pass
+        if type(inp) == int and inp >= 0 and inp < len(settled_users):
+            user = list_users.pop(list_users.index(settled_users[inp]))
+            print("Deleted user: \"{0} {1}\"".format(user.name, user.surname))
+            del user
+            return
+        elif inp == "c":
+            return
+        else:
+            print("Wrong input. Try again")
+
+list_groups = []
+list_users = []
 
 while True:
     print("----------------------------------------------------------------")
