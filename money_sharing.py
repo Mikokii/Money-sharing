@@ -20,6 +20,7 @@ class Group:
         self.members = OrderedDict()
         self.matrix = []
         self.list_expenses = []
+        self.calculation_type = "normal"
     def AddMember(self, member):
         self.members[member] = 0
         member.groups.append(self)
@@ -37,13 +38,19 @@ class Group:
                 index_member = list(self.members).index(mem)
                 self.matrix[index][index_member] -= round(expense.members[mem],2)
                 self.matrix[index_member][index] += round(expense.members[mem],2)
+    def ChangeCalculationType(self):
+        if self.calculation_type == "normal":
+            self.calculation_type = "simplify"
+        else:
+            self.calculation_type = "normal"
 class Expense:
-    def __init__(self, name, value, currency, payer, members, type):
+    def __init__(self, name, value, currency, payer, members, category, type):
         self.name = name
         self.value = value
         self.currency = currency
         self.payer = payer
         self.members = members
+        self.category = category
         self.type = type
         if type == "equally":
             _value_by_person = round(self.value/len(self.members),2)
@@ -221,6 +228,77 @@ def DeleteUser():
         else:
             print("Wrong input. Try again")
 
+def ShowGroupInfo(group):
+    print("\"{}\"".format(group.name))
+    print("Group expense calculation type: {}".format(group.calcuation_type))
+    print("Choose action:")
+    print("(0) Add new expense")
+    print("(1) Show balance of all members")
+    print("(2) Show balance of certain member")
+    print("(3) Show all members")
+    print("(4) Add new member")
+    print("(5) Show expense history")
+    print("(6) Show total spendings of group")
+    print("(7) Change expense calculation type (to see diffrence between calculation types enter \"h\")")
+    print("(8) Go back to group list")
+    while True:
+        inp = input()
+        if inp == "0":
+            pass
+        elif inp == "1":
+            pass
+        elif inp == "2":
+            pass
+        elif inp == "3":
+            pass
+        elif inp == "4":
+            pass
+        elif inp == "5":
+            ShowExpensesHistory(group)
+        elif inp == "6":
+            pass
+        elif inp == "7":
+            group.ChangeCalculationType()
+        elif inp == "8":
+            return
+        elif inp == "h":
+            print("Normal type of expense calculation type is the intuitive way of calculating who owes who what amount of money.\n\
+                  Simplify type of expense calculation reduce the amount of needed transfers between users, but can be unintuitive.\
+                  Example: A owes B 5$ and B owes C 5$. Simplify type of expense calculation reduce trasfers number from 2 to 1 - A owes C 5$.")
+        else:
+            print("Wrong input. Try again")
+
+def ShowExpensesHistory(group):
+    if len(group.list_expenses) == 0:
+        print("There are no expenses")
+        return
+    while True:
+        print("Type number to see more information about certain expense or \"e\" to go back to group menu")
+        for i in range(len(group.list_expenses)-1, -1):
+            expense = group.list_expenses[i]
+            print("({0}) \"{1}\" - {2}{3} - {4}".format(len(group.list_expenses)-i-1, expense.name), expense.amount, expense.currency, expense.category)
+        inp = input()
+        try:
+            inp = int(input)
+        except:
+            pass
+        if type(inp) == int and inp >= 0 and inp < len(group.list_expenses):
+            ShowExpense(group.list_expenses[len(group.list_expenses)-inp-1])
+        elif inp == "e":
+            return
+        else:
+            print("Wrong input. Try again")
+
+def ShowExpense(expense):
+    print("Type anything to exit")
+    print("\"{0}}\"     -     category: {1}".format(expense.name, expense.category))
+    print("{0}{1}".format(expense.value,expense.currency))
+    print("{0} {1} paid {2}{3}".format(expense.payer.name, expense.payer.surname, expense.value, expense.currency))
+    for member in expense.members:
+        print("{0} {1} owes {2}{3}".format(member.name, member.surname, expense.members[member], expense.currency))
+    inp = input()
+    return
+
 list_groups = []
 list_users = []
 
@@ -239,3 +317,5 @@ while True:
         exit()
     else:
         print("Wrong input. Try again")
+
+# 1. Show groups -> show group
