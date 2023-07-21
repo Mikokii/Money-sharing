@@ -81,10 +81,7 @@ def ShowGroups():
         except:
             pass
         if type(inp) == int and inp >= 0 and inp < len(list_groups):
-            print(list_groups[inp].name)
-            #
-            #
-            #
+            ShowGroupInfo(list_groups[inp])
         elif inp == "a":
             AddGroup()
             continue
@@ -229,19 +226,19 @@ def DeleteUser():
             print("Wrong input. Try again")
 
 def ShowGroupInfo(group):
-    print("\"{}\"".format(group.name))
-    print("Group expense calculation type: {}".format(group.calcuation_type))
-    print("Choose action:")
-    print("(0) Add new expense")
-    print("(1) Show balance of all members")
-    print("(2) Show balance of certain member")
-    print("(3) Show all members")
-    print("(4) Add new member")
-    print("(5) Show expense history")
-    print("(6) Show total spendings of group")
-    print("(7) Change expense calculation type (to see diffrence between calculation types enter \"h\")")
-    print("(8) Go back to group list")
     while True:
+        print("\"{}\"".format(group.name))
+        print("Group expense calculation type: {}".format(group.calculation_type))
+        print("Choose action:")
+        print("(0) Add new expense")
+        print("(1) Show balance of all members")
+        print("(2) Show balance of certain member")
+        print("(3) Show all members")
+        print("(4) Add new member")
+        print("(5) Show expense history")
+        print("(6) Show total spendings of group")
+        print("(7) Change expense calculation type (to see diffrence between calculation types enter \"h\")")
+        print("(8) Go back to group list")
         inp = input()
         if inp == "0":
             pass
@@ -263,7 +260,7 @@ def ShowGroupInfo(group):
             return
         elif inp == "h":
             print("Normal type of expense calculation type is the intuitive way of calculating who owes who what amount of money.\n\
-                  Simplify type of expense calculation reduce the amount of needed transfers between users, but can be unintuitive.\
+                  Simplify type of expense calculation reduce the amount of needed transfers between users, but can be unintuitive.\n\
                   Example: A owes B 5$ and B owes C 5$. Simplify type of expense calculation reduce trasfers number from 2 to 1 - A owes C 5$.")
         else:
             print("Wrong input. Try again")
