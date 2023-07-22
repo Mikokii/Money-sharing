@@ -14,13 +14,14 @@ class User:
             self._balance += group.members[self]
         return self._balance
 class Group:
-    def __init__(self, name):
+    def __init__(self, name, currency):
         self.name = name
         list_groups.append(self)
         self.members = OrderedDict()
         self.matrix = []
         self.list_expenses = []
         self.calculation_type = "normal"
+        self.currency = currency
     def AddMember(self, member):
         self.members[member] = 0
         member.groups.append(self)
@@ -43,6 +44,27 @@ class Group:
             self.calculation_type = "simplify"
         else:
             self.calculation_type = "normal"
+    def IsSettled(self):
+        for mem in self.members:
+            if self.members[mem] != 0:
+                return False
+        return True
+    def CalculateTotalSpendings(self):
+        if len(self.list_expenses) > 0:
+            total = 0
+            single_currency = True
+            for i in range(len(self.list_expenses)-1):
+                if self.list_expenses[i].currency != self.list_expenses[i+1].currency:
+                    single_currency = False
+                total += self.list_expenses[i].value
+            total += self.list_expenses[-1].value
+            if single_currency:
+                curr = self.list_expenses[-1].currency
+            else:
+                curr = "many currencies"
+            return str(total) + curr
+        else:
+            return "There are no expenses"
 class Expense:
     def __init__(self, name, value, currency, payer, members, category, type):
         self.name = name
@@ -97,7 +119,51 @@ def ShowGroups():
 
 def AddGroup():
     name = input("Name of group: ")
-    Group(name)
+    currency = SelectCurrency()
+    Group(name, currency)
+
+def SelectCurrency():
+    while True:
+        print("Select currency:")
+        print("(1) USD - $")
+        print("(2) EUR - €")
+        print("(3) GBP - £")
+        print("(4) JPY - ¥")
+        print("(5) CNY - 元")
+        print("(6) PLN")
+        print("(7) AUD")
+        print("(8) CAD")
+        print("(9) CHF")
+        print("(0) Other")
+        inp = input()
+        try:
+            inp = int(inp)
+            match inp:
+                case 1:
+                    return "$"
+                case 2:
+                    return "€"
+                case 3:
+                    return "£"
+                case 4:
+                    return "¥"
+                case 5:
+                    return "元"
+                case 6:
+                    return "PLN"
+                case 7:
+                    return "AUD"
+                case 8:
+                    return "CAD"
+                case 9:
+                    return "CHF"
+                case 0:
+                    curr = input("Type currency: ")
+                    return curr
+                case _:
+                    print("Wrong input. Try again")
+        except:
+            print("Wrong input. Try again")
 
 def DeleteGroup():
     if len(list_groups) == 0:
@@ -229,6 +295,7 @@ def ShowGroupInfo(group):
     while True:
         print("\"{}\"".format(group.name))
         print("Group expense calculation type: {}".format(group.calculation_type))
+        print("Group currency: {}".format(group.currency))
         print("Choose action:")
         print("(0) Add new expense")
         print("(1) Show balance of all members")
@@ -238,7 +305,8 @@ def ShowGroupInfo(group):
         print("(5) Show expense history")
         print("(6) Show total spendings of group")
         print("(7) Change expense calculation type (to see diffrence between calculation types enter \"h\")")
-        print("(8) Go back to group list")
+        print("(8) Change currency of the group")
+        print("(9) Go back to group list")
         inp = input()
         if inp == "0":
             pass
@@ -247,16 +315,28 @@ def ShowGroupInfo(group):
         elif inp == "2":
             pass
         elif inp == "3":
-            pass
+            ShowMembers(group)
         elif inp == "4":
             pass
         elif inp == "5":
             ShowExpensesHistory(group)
         elif inp == "6":
-            pass
+            print(group.CalculateTotalSpendings())
         elif inp == "7":
             group.ChangeCalculationType()
         elif inp == "8":
+            if group.IsSettled():
+                group.currency = SelectCurrency()
+            else:
+                print("Group members are not settled!\
+                      Changing currency will convert existing debts to new currency (it want affect currency of expenses in history)")
+                print("Type \"0\" to continue or anything else to cancel this action")
+                conf = input()
+                if conf == "0":
+                    group.currency = SelectCurrency()
+                else:
+                    pass
+        elif inp == "9":
             return
         elif inp == "h":
             print("Normal type of expense calculation type is the intuitive way of calculating who owes who what amount of money.\n\
@@ -296,6 +376,13 @@ def ShowExpense(expense):
     inp = input()
     return
 
+def ShowMembers(group):
+    if len(group.members) == 0:
+        print("There are no members in this group")
+        return
+    for member in group.members:
+        print("{0} {1}".format(member.name, member.surname))
+
 list_groups = []
 list_users = []
 
@@ -315,4 +402,12 @@ while True:
     else:
         print("Wrong input. Try again")
 
-# 1. Show groups -> show group
+# Change Calculate total spendings of group to separate checking single currency (and change returning format in group info)
+# Add checking single currency to user
+# Show currency of user in detailed user info
+# Add remaining options to group info
+# Add another type of expenses
+# Add calculating transfers in both ways
+# Add option to settle up two users
+# ... 
+# Clean up (Change some separate functions to class functions ??????)
