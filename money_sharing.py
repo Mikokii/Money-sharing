@@ -100,10 +100,8 @@ def ShowGroups():
             ShowGroupInfo(list_groups[inp])
         elif inp == "a":
             AddGroup()
-            continue
         elif inp == "d":
             DeleteGroup()
-            continue
         elif inp == "m":
             break
         elif inp == "e":
@@ -245,26 +243,26 @@ def AddUser():
         print("To cancel adding a user type 0 at any stage")
         name = input("Name: ")
         if name == "0":
-            return
+            return False
         surname = input("Surname: ")
         if surname == "0":
-            return
+            return False
         username = input("Username: ")
         if username == "0":
-            return
+            return False
         email = input("Email: ")
         if email == "0":
-            return
+            return False
         print("Confirm data: {0} {1}, {2}, {3}".format(name, surname, username, email))
         while True:
             inp = input("Type 1 if you want to confirm data, 2 if you want to enter it again or 0 if you want to cancel whole action")
             if inp == "1":
                 User(name, surname, username, email)
-                return
+                return True
             elif inp == "2":
                 break
             elif inp == "0":
-                return
+                return False
             else:
                 print("Wrong input. Try again")
     
@@ -318,45 +316,48 @@ def ShowGroupInfo(group):
         print("(8) Change currency of the group")
         print("(9) Go back to group list")
         inp = input()
-        if inp == "0":
-            pass
-        elif inp == "1":
-            pass
-        elif inp == "2":
-            pass
-        elif inp == "3":
-            ShowMembers(group)
-        elif inp == "4":
-            pass
-        elif inp == "5":
-            ShowExpensesHistory(group)
-        elif inp == "6":
-            print("Total spendings:")
-            for currency, value in sorted(group.total.items(), key = lambda item: item[1]):
-                print(value, currency)
-
-        elif inp == "7":
-            group.ChangeCalculationType()
-        elif inp == "8":
-            if group.IsSettled():
-                group.currency = SelectCurrency()
-            else:
-                print("Group members are not settled!\
-                      Changing currency will convert existing debts to new currency (it want affect currency of expenses in history)")
-                print("Type \"0\" to continue or anything else to cancel this action")
-                conf = input()
-                if conf == "0":
+        match inp:
+            case "0":
+                pass
+            case "1":
+                pass
+            case "2":
+                pass
+            case "3":
+                ShowMembers(group)
+            case "4":
+                AddMember(group)
+            case "5":
+                ShowExpensesHistory(group)
+            case "6":
+                if len(group.list_expenses) == 0:
+                    print("There are no expenses")
+                else:
+                    print("Total spendings:")
+                    for currency, value in sorted(group.total.items(), key = lambda item: item[1]):
+                        print(value, currency)
+            case "7":
+                group.ChangeCalculationType()
+            case "8":
+                if group.IsSettled():
                     group.currency = SelectCurrency()
                 else:
-                    pass
-        elif inp == "9":
-            return
-        elif inp == "h":
-            print("Normal type of expense calculation type is the intuitive way of calculating who owes who what amount of money.\n\
-                  Simplify type of expense calculation reduce the amount of needed transfers between users, but can be unintuitive.\n\
-                  Example: A owes B 5$ and B owes C 5$. Simplify type of expense calculation reduce trasfers number from 2 to 1 - A owes C 5$.")
-        else:
-            print("Wrong input. Try again")
+                    print("Group members are not settled!\
+                        Changing currency will convert existing debts to new currency (it want affect currency of expenses in history)")
+                    print("Type \"0\" to continue or anything else to cancel this action")
+                    conf = input()
+                    if conf == "0":
+                        group.currency = SelectCurrency()
+                    else:
+                        pass
+            case "9":
+                return
+            case "h":
+                print("Normal type of expense calculation type is the intuitive way of calculating who owes who what amount of money.")
+                print("Simplify type of expense calculation reduce the amount of needed transfers between users, but can be unintuitive.")
+                print("Example: A owes B 5$ and B owes C 5$. Simplify type of expense calculation reduce trasfers number from 2 to 1 - A owes C 5$.")
+            case _:
+                print("Wrong input. Try again")
 
 def ShowExpensesHistory(group):
     if len(group.list_expenses) == 0:
@@ -395,6 +396,38 @@ def ShowMembers(group):
         return
     for member in group.members:
         print("{0} {1}".format(member.name, member.surname))
+
+def AddMember(group):
+    while True:
+        print("Choose existing user to be added or add new user")
+        print("(c) Cancel action")
+        print("(0) Add new user")
+        list_not_in_group = []
+        for user in list_users:
+            if not (user in list(group.members)):
+                list_not_in_group.append(user)
+        for i in range(len(list_not_in_group)):
+            user = list_users[i]
+            print("({0}) {1} {2}".format(i+1, user.name, user.surname))
+        inp = input()
+        if inp == "c":
+            return
+        try:
+            inp = int(inp)
+            if inp == 0:
+                if AddUser():
+                    group.AddMember(list_users[-1])
+                    print("Added {} {} to group".format(list_users[-1].name, list_users[-1].surname))
+                    return
+            elif inp >= 1 and inp <= len(list_not_in_group):
+                group.AddMember(list_not_in_group[i-1])
+                print("Added {} {} to group".format(list_not_in_group[i-1].name, list_not_in_group[i-1].surname))
+                return
+            else:
+                print("Wrong input. Try again")
+        except:
+            print("Wrong input. Try again")
+
 
 list_groups = []
 list_users = []
