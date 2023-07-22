@@ -8,10 +8,13 @@ class User:
         self.email = email
         list_users.append(self)
         self.groups = []
+        self.total = {}
     def CalculateBalance(self):
-        self._balance = 0
+        self._balance = {}
         for group in self.groups:
-            self._balance += group.members[self]
+            if not (group.currency in self._balance.keys()):
+                self._balance[group.currency] = 0
+            self._balance[group.currency] += group.members[self]
         return self._balance
 class Group:
     def __init__(self, name, currency):
@@ -22,6 +25,7 @@ class Group:
         self.list_expenses = []
         self.calculation_type = "normal"
         self.currency = currency
+        self.total = {}
     def AddMember(self, member):
         self.members[member] = 0
         member.groups.append(self)
@@ -31,10 +35,16 @@ class Group:
     def AddExpense(self, name, value, currency, payer, members, type):
         expense = Expense(name, value, currency, payer, members, type)
         self.list_expenses.append(expense)
-        self.members[expense.payer] += round(expense.value,2)
-        index = list(self.members).index(expense.payer)
+        if not (currency in self.total.keys()):
+            self.total[currency] = 0
+        self.total[currency] += round(value,2)
+        self.members[payer] += round(value,2)
+        index = list(self.members).index(payer)
         for mem in expense.members:
             self.members[mem] -= round(expense.members[mem],2)
+            if not (currency in mem.total.keys()):
+                mem.total[currency] = 0
+            mem.total[currency] += round(expense.members[mem],2)
             if mem != expense.payer:
                 index_member = list(self.members).index(mem)
                 self.matrix[index][index_member] -= round(expense.members[mem],2)
@@ -49,22 +59,6 @@ class Group:
             if self.members[mem] != 0:
                 return False
         return True
-    def CalculateTotalSpendings(self):
-        if len(self.list_expenses) > 0:
-            total = 0
-            single_currency = True
-            for i in range(len(self.list_expenses)-1):
-                if self.list_expenses[i].currency != self.list_expenses[i+1].currency:
-                    single_currency = False
-                total += self.list_expenses[i].value
-            total += self.list_expenses[-1].value
-            if single_currency:
-                curr = self.list_expenses[-1].currency
-            else:
-                curr = "many currencies"
-            return str(total) + curr
-        else:
-            return "There are no expenses"
 class Expense:
     def __init__(self, name, value, currency, payer, members, category, type):
         self.name = name
@@ -210,7 +204,23 @@ def ShowUsers():
             print("Name: {0} {1}".format(user.name, user.surname))
             print("Username: {}".format(user.username))
             print("Email: {}".format(user.email))
-            print("Balance: {}".format(user.CalculateBalance()))
+            balance = user.CalculateBalance()
+            if len(balance) == 0:
+                print("No expenses")
+            elif len(balance) == 1:
+                print("Balance: {}{}".format(list(balance.values())[0], list(balance)[0]))
+            else:
+                print("Balance:")
+                for currency, value in sorted(balance.items(), key = lambda item: item[1]):
+                    print(value, currency)
+            if len(user.total) == 0:
+                pass
+            elif len(user.total) == 1:
+                print("Total spendings: {}{}".format(list(user.total.values())[0], list(balance)[0]))
+            else:
+                print("Total spendings:")
+                for currency, value in sorted(user.total.items(), key = lambda item: item[1]):
+                    print(value, currency)
             if len(user.groups) == 0:
                 print("Not member of any groups")
             else:
@@ -321,7 +331,10 @@ def ShowGroupInfo(group):
         elif inp == "5":
             ShowExpensesHistory(group)
         elif inp == "6":
-            print(group.CalculateTotalSpendings())
+            print("Total spendings:")
+            for currency, value in sorted(group.total.items(), key = lambda item: item[1]):
+                print(value, currency)
+
         elif inp == "7":
             group.ChangeCalculationType()
         elif inp == "8":
