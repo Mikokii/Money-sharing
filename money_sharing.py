@@ -22,6 +22,16 @@ class User:
                 self._balance[group.currency] = 0
             self._balance[group.currency] += round(group.members[self],2)
         return self._balance
+    def IsSettled(self):
+        for group in self.groups:
+            if group.calculation_type == "normal":
+                for i in range(len(group.matrix)):
+                    if group.matrix[i][list(group.members).index(self)] != 0:
+                        return False
+            if group.calculation_type == "simplify":
+                if group.members[self] != 0:
+                    return False
+        return True
 class Group:
     def __init__(self, name):
         self.name = name
@@ -582,8 +592,7 @@ def DeleteUser():
         settled_users = []
         for i in range(len(list_users)):
             user = list_users[i]
-            user_balance_check = list(user.CalculateBalance().keys())
-            if len(user_balance_check) == 0 or (len(user_balance_check) > 0 and all(user_balance_check) and user_balance_check[0] == 0):
+            if user.IsSettled():
                 settled_users.append(user)
         if len(settled_users) == 0:
             print("No settled users")
