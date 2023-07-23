@@ -318,8 +318,11 @@ class Group:
                             for chosen in chosen_members:
                                 chosen_members[chosen] = 0
                     elif inp == "":
-                        members = {user:0 for user in list(chosen_members) if chosen_members[user] == 1}
-                        break
+                        if all(num == 0 for num in list(chosen_members.values())):
+                            print("Someone needs to be picked")
+                        else:
+                            members = {user:0 for user in list(chosen_members) if chosen_members[user] == 1}
+                            break
                     else:
                         print("Wrong input. Try again")
             types = ["equally", "unequally"] ############ ADD TYPES
