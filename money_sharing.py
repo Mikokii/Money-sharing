@@ -1,5 +1,9 @@
 from collections import OrderedDict
 import random
+
+def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
+def prGreen(skk): print("\033[92m {}\033[00m" .format(skk))
+
 class User:
     def __init__(self, name, surname, username, email):
         self.name = name
@@ -14,7 +18,7 @@ class User:
         for group in self.groups:
             if not (group.currency in self._balance.keys()):
                 self._balance[group.currency] = 0
-            self._balance[group.currency] += group.members[self]
+            self._balance[group.currency] += round(group.members[self],2)
         return self._balance
 class Group:
     def __init__(self, name, currency):
@@ -32,8 +36,8 @@ class Group:
         self.matrix.append([0]*len(self.members))
         for i in range(len(self.members)-1):
             self.matrix[i].append(0)
-    def AddExpense(self, name, value, currency, payer, members, type):
-        expense = Expense(name, value, currency, payer, members, type)
+    def AddExpense(self, name, value, currency, payer, members, category, type):
+        expense = Expense(name, value, currency, payer, members, category, type)
         self.list_expenses.append(expense)
         if not (currency in self.total.keys()):
             self.total[currency] = 0
@@ -209,7 +213,7 @@ def ShowUsers():
                 print("Balance: {}{}".format(list(balance.values())[0], list(balance)[0]))
             else:
                 print("Balance:")
-                for currency, value in sorted(balance.items(), key = lambda item: item[1]):
+                for currency, value in sorted(balance.items(), key = lambda item: item[1], reverse=True):
                     print(value, currency)
             if len(user.total) == 0:
                 pass
@@ -217,14 +221,14 @@ def ShowUsers():
                 print("Total spendings: {}{}".format(list(user.total.values())[0], list(balance)[0]))
             else:
                 print("Total spendings:")
-                for currency, value in sorted(user.total.items(), key = lambda item: item[1]):
+                for currency, value in sorted(user.total.items(), key = lambda item: item[1], reverse=True):
                     print(value, currency)
             if len(user.groups) == 0:
                 print("Not member of any groups")
             else:
                 print("Groups: ")
                 for group in user.groups:
-                    print("\t{}".format(group))
+                    print("\"{}\"".format(group.name))
         elif inp == "a":
             AddUser()
             continue
@@ -255,7 +259,7 @@ def AddUser():
             return False
         print("Confirm data: {0} {1}, {2}, {3}".format(name, surname, username, email))
         while True:
-            inp = input("Type 1 if you want to confirm data, 2 if you want to enter it again or 0 if you want to cancel whole action")
+            inp = input("Type 1 if you want to confirm data, 2 if you want to enter it again or 0 if you want to cancel whole action: ")
             if inp == "1":
                 User(name, surname, username, email)
                 return True
@@ -307,7 +311,7 @@ def ShowGroupInfo(group):
         print("Choose action:")
         print("(0) Add new expense")
         print("(1) Show balance of all members")
-        print("(2) Show balance of certain member")
+        print("(2) Show balance of certain member (in this group)")
         print("(3) Show all members")
         print("(4) Add new member")
         print("(5) Show expense history")
@@ -318,11 +322,11 @@ def ShowGroupInfo(group):
         inp = input()
         match inp:
             case "0":
-                pass
+                AddExpense(group)
             case "1":
                 pass
             case "2":
-                pass
+                ShowBalanceMember(group)
             case "3":
                 ShowMembers(group)
             case "4":
@@ -365,24 +369,25 @@ def ShowExpensesHistory(group):
         return
     while True:
         print("Type number to see more information about certain expense or \"e\" to go back to group menu")
-        for i in range(len(group.list_expenses)-1, -1):
+        for i in range(len(group.list_expenses)-1, -1, -1):
             expense = group.list_expenses[i]
-            print("({0}) \"{1}\" - {2}{3} - {4}".format(len(group.list_expenses)-i-1, expense.name), expense.amount, expense.currency, expense.category)
+            print("({0}) \"{1}\" - {2}{3} - {4}".format(len(group.list_expenses)-i-1, expense.name, expense.value, expense.currency, expense.category))
         inp = input()
         try:
-            inp = int(input)
+            inp = int(inp)
+            if inp >= 0 and inp < len(group.list_expenses):
+                ShowExpense(group.list_expenses[len(group.list_expenses)-inp-1])
+            else:
+                print("Wrong input. Try again")
         except:
-            pass
-        if type(inp) == int and inp >= 0 and inp < len(group.list_expenses):
-            ShowExpense(group.list_expenses[len(group.list_expenses)-inp-1])
-        elif inp == "e":
-            return
-        else:
-            print("Wrong input. Try again")
+            if inp == "e":
+                return
+            else:
+                print("Wrong input. Try again")
 
 def ShowExpense(expense):
     print("Type anything to exit")
-    print("\"{0}}\"     -     category: {1}".format(expense.name, expense.category))
+    print("\"{0}\"   -   category: {1}".format(expense.name, expense.category))
     print("{0}{1}".format(expense.value,expense.currency))
     print("{0} {1} paid {2}{3}".format(expense.payer.name, expense.payer.surname, expense.value, expense.currency))
     for member in expense.members:
@@ -407,7 +412,7 @@ def AddMember(group):
             if not (user in list(group.members)):
                 list_not_in_group.append(user)
         for i in range(len(list_not_in_group)):
-            user = list_users[i]
+            user = list_not_in_group[i]
             print("({0}) {1} {2}".format(i+1, user.name, user.surname))
         inp = input()
         if inp == "c":
@@ -420,13 +425,182 @@ def AddMember(group):
                     print("Added {} {} to group".format(list_users[-1].name, list_users[-1].surname))
                     return
             elif inp >= 1 and inp <= len(list_not_in_group):
-                group.AddMember(list_not_in_group[i-1])
+                group.AddMember(list_not_in_group[inp-1])
                 print("Added {} {} to group".format(list_not_in_group[i-1].name, list_not_in_group[i-1].surname))
                 return
             else:
                 print("Wrong input. Try again")
         except:
             print("Wrong input. Try again")
+
+def ShowBalanceMember(group):
+    if len(group.members) == 0:
+        print("There are no members in this group")
+        return
+    while True:
+        print("Type corresponding number of member to see his/her balance or anything else to quit")
+        for i in range(len(group.members)):
+            member = list(group.members)[i]
+            print("({}) {} {}".format(i+1, member.name, member.surname))
+        inp = input()
+        try:
+            inp = int(inp)
+            if inp >= 1 and inp <= len(group.members):
+                member = list(group.members)[inp-1]
+                value = group.members[member]
+                if value == 0:
+                    print("{} {} is settled".format(member.name, member.surname))
+                elif value < 0:
+                    print("{} {} owes {}{}".format(member.name, member.surname, -value, group.currency))
+                    #
+                    #
+                    #
+                    #
+                else:
+                    print("{} {} is owed {}{}".format(member.name, member.surname, value, group.currency))
+                    #
+                    #
+                    #
+                    #
+                    #
+                print(("Type \"0\" to see another member's balance or anything else to go back to group menu"))
+                inp = input()
+                if inp == "0":
+                    continue
+                else:
+                    return
+            else:
+                return
+        except:
+            return
+
+def AddExpense(group):
+    if len(group.members) == 0:
+        print("There are no members in group")
+        return
+    while True:
+        print("Follow instructions or type \"0\" at any point to cancel the action")
+        name = input("Name of expense: ")
+        if name == "0":
+            return
+        categories = ["General", "Food and drink", "Entertainment", "Home", "Life", "Transport", "Utilities", "Business", "Custom category"]
+        while True:
+            for i in range(len(categories)):
+                print("({}) {}".format(i+1, categories[i]))
+            inp = input()
+            try:
+                inp = int(inp)
+                if inp == 0:
+                    return
+                elif inp >= 1 and inp < len(categories):
+                    category = categories[inp-1]
+                    break
+                elif inp == len(categories):
+                    category = input("Category: ")
+                    break
+                else:
+                    print("Wrong input. Try again")
+            except:
+                print("Wrong input. Try again")
+        while True:
+            value = input("Value ({}): ".format(group.currency))
+            try:
+                value = round(float(value),2)
+                if value == 0:
+                    return
+                elif value < 0:
+                    print("Wrong input. Try again")
+                else:
+                    break
+            except:
+                print("Wrong input. Try again")
+        while True:
+            print("Choose payer: ")
+            for i in range(len(group.members)):
+                member = list(group.members)[i]
+                print("({}) {} {}".format(i+1, member.name, member.surname))
+            inp = input()
+            try:
+                inp = int(inp)
+                if inp == 0:
+                    return
+                elif inp >= 1 and inp <= len(group.members):
+                    payer = list(group.members)[inp-1]
+                    break
+                else:
+                    print("Wrong input. Try again")
+            except:
+                print("Wrong input. Try again")
+        chosen_members = {mem:0 for mem in list(group.members)}
+        while True:
+            print("Choose who is involved in this expense (green - chosen, red - not chosen):")
+            print("Press enter to confirm selection")
+            print("(a) Select/Discard everybody")
+            for i in range(len(group.members)):
+                member = list(group.members)[i]
+                if chosen_members[member] == 0:
+                    prRed("({}) {} {}".format(i+1, member.name, member.surname))
+                else:
+                    prGreen("({}) {} {}".format(i+1, member.name, member.surname))
+            inp = input()
+            try:
+                inp = int(inp)
+                if inp == 0:
+                    return
+                elif inp >= 1 and inp <= len(group.members):
+                    chosen_members[list(group.members)[inp-1]] = abs(chosen_members[list(group.members)[inp-1]]-1)
+                else:
+                    print("Wrong input. Try again")
+            except:
+                if inp == "a":
+                    if 0 in list(chosen_members.values()):
+                        for chosen in chosen_members:
+                            chosen_members[chosen] = 1
+                    else:
+                        for chosen in chosen_members:
+                            chosen_members[chosen] = 0
+                elif inp == "":
+                    members = {user:0 for user in list(chosen_members) if chosen_members[user] == 1}
+                    break
+                else:
+                    print("Wrong input. Try again")
+        types = ["equally", "unequally"] ############ ADD TYPES
+        while True:
+            print("Choose a way to split expense")
+            for i in range(len(types)):
+                print("({}) {}".format(i+1, types[i]))
+            inp = input()
+            try:
+                inp = int(inp)
+                if inp == 0:
+                    return
+                elif inp >= 1 and inp <= len(types):
+                    type = types[inp - 1]
+                    break
+                else:
+                    print("Wrong input. Try again")
+            except:
+                print("Wrong input. Try again")
+        while True:
+            print("Type \"1\" to confirm expense or \"2\" to enter it again")
+            print("{} - {} - {}{}".format(name, category, value, group.currency))
+            print("Paid by {} {}".format(payer.name, payer.surname))
+            print("Split across:")
+            for mem in members:
+                print("{} {}".format(mem.name, mem.surname))
+            print("Divided {}".format(type))
+            inp = input()
+            match inp:
+                case "0":
+                    return
+                case "1":
+                    group.AddExpense(name, value, group.currency, payer, members, category, type)
+                    return
+                case "2":
+                    break
+                case _:
+                    print("Wrong input. Try again")
+
 
 
 list_groups = []
@@ -448,12 +622,11 @@ while True:
     else:
         print("Wrong input. Try again")
 
-# Change Calculate total spendings of group to separate checking single currency (and change returning format in group info)
-# Add checking single currency to user
-# Show currency of user in detailed user info
+# Someone needs to be picked in expense
 # Add remaining options to group info
 # Add another type of expenses
-# Add calculating transfers in both ways
+# Add calculating transfers in both ways (also not finished showing balance)
 # Add option to settle up two users
+# Add specific ownings in Show balance member
 # ... 
 # Clean up (Change some separate functions to class functions ??????)
