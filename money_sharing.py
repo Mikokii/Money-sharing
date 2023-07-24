@@ -263,238 +263,7 @@ class Group:
                     return
             except:
                 return
-    def AddExpenseMenu(self):
-        def SelectCategory():
-            categories = ["General", "Food and drink", "Entertainment", "Home", "Life", "Transport", "Utilities", "Business", "Custom category"]
-            while True:
-                for i in range(len(categories)):
-                    print("({}) {}".format(i+1, categories[i]))
-                inp = input()
-                try:
-                    inp = int(inp)
-                    if inp == 0:
-                        return "0"
-                    elif inp >= 1 and inp < len(categories):
-                        return categories[inp-1]
-                    elif inp == len(categories):
-                        return input("Category: ")
-                    else:
-                        print("Wrong input. Try again")
-                except:
-                    print("Wrong input. Try again")
-        def SelectValue(self):
-            while True:
-                value = input("Value ({}): ".format(self.currency))
-                try:
-                    value = round(float(value),2)
-                    if value < 0:
-                        print("Wrong input. Try again")
-                    else:
-                        return value
-                except:
-                    print("Wrong input. Try again")
-        def SelectPayer(self):
-            while True:
-                print("Choose payer: ")
-                for i in range(len(self.members)):
-                    member = list(self.members)[i]
-                    print("({}) {} {}".format(i+1, member.name, member.surname))
-                inp = input()
-                try:
-                    inp = int(inp)
-                    if inp == 0:
-                        return "0"
-                    elif inp >= 1 and inp <= len(self.members):
-                        return list(self.members)[inp-1]
-                    else:
-                        print("Wrong input. Try again")
-                except:
-                    print("Wrong input. Try again")
-        def SelectMembers(self):
-            chosen_members = {mem:0 for mem in list(self.members)}
-            while True:
-                print("Choose who is involved in this expense (green - chosen, red - not chosen):")
-                print("Press enter to confirm selection")
-                print("(a) Select/Discard everybody")
-                for i in range(len(self.members)):
-                    member = list(self.members)[i]
-                    if chosen_members[member] == 0:
-                        prRed("({}) {} {}".format(i+1, member.name, member.surname))
-                    else:
-                        prGreen("({}) {} {}".format(i+1, member.name, member.surname))
-                inp = input()
-                try:
-                    inp = int(inp)
-                    if inp == 0:
-                        return "0"
-                    elif inp >= 1 and inp <= len(self.members):
-                        chosen_members[list(self.members)[inp-1]] = abs(chosen_members[list(self.members)[inp-1]]-1)
-                    else:
-                        print("Wrong input. Try again")
-                except:
-                    if inp == "a":
-                        if 0 in list(chosen_members.values()):
-                            for chosen in chosen_members:
-                                chosen_members[chosen] = 1
-                        else:
-                            for chosen in chosen_members:
-                                chosen_members[chosen] = 0
-                    elif inp == "":
-                        if all(num == 0 for num in list(chosen_members.values())):
-                            print("Someone needs to be picked")
-                        else:
-                            return {user:0 for user in list(chosen_members) if chosen_members[user] == 1}
-                    else:
-                        print("Wrong input. Try again")
-        def SelectType():
-            types = ["equally", "unequally by value", "unequally by percentage", "unequally by shares"]
-            while True:
-                print("Choose a way to split expense")
-                for i in range(len(types)):
-                    print("({}) {}".format(i+1, types[i]))
-                inp = input()
-                try:
-                    inp = int(inp)
-                    if inp == 0:
-                        return "0"
-                    elif inp >= 1 and inp <= len(types):
-                        return types[inp - 1]
-                    else:
-                        print("Wrong input. Try again")
-                except:
-                    print("Wrong input. Try again")
-        def SplitingMenu(self, type, members, value):
-            def CalculateEqually(self, members, value):
-                _value_by_person = round(value/len(members),2)
-                for mem in members:
-                    members[mem] = _value_by_person
-                if sum(members.values()) != value:
-                    members[list(self.members)[random.randint(0, len(members)-1)]] += round((value - sum(members.values())), 2)
-                return members
-            def CalculateUnequallyValue(self, members, value):
-                while True:
-                    print("Choose person to change value or type enter to confirm selection")
-                    remaining = round(value - sum(members.values()),2)
-                    print("Remaining amount: {}{}".format(remaining, self.currency))
-                    for i in range(len(members)):
-                        mem = list(members.keys())[i]
-                        print("({}) {} {}: {}{}".format(i+1, mem.name, mem.surname, members[mem], self.currency))
-                    inp = input()
-                    try:
-                        inp = int(inp)
-                        if inp >= 1 and inp <= len(members):
-                            while True:
-                                inp1 = input("Enter value or \"0\" to cancel: ")
-                                try:
-                                    inp1 = round(float(inp1),2)
-                                    if inp1 == 0:
-                                        break
-                                    elif inp1 > 0 and inp1 <= (remaining + members[list(members.keys())[inp-1]]):
-                                        members[list(members.keys())[inp-1]] = round(inp1, 2)
-                                        break
-                                    else:
-                                        print("Value must be greater than 0 and lower or equal to remaining amount")
-                                except:
-                                    print("Wrong input. Try again")
-                        else:
-                            print("Wrong input. Try again")
-                    except:
-                        if inp == "":
-                            remaining = round(value - sum(members.values()),2)
-                            if remaining == 0:
-                                return members
-                            else:
-                                print("Remaining money to split")
-                        else:
-                            print("Wrong input. Try again")
-            def CalculateUnequallyPercentage(members, value):
-                while True:
-                    print("Choose person to change percentage or type enter to confirm selection")
-                    remaining = round((value - sum(percentage*value for percentage in members.values()))/value,4)*100
-                    print("Remaining % of value: {}%".format(remaining))
-                    for i in range(len(members)):
-                        mem = list(members.keys())[i]
-                        print("({}) {} {}: {}%".format(i+1, mem.name, mem.surname, members[mem]*100))
-                    inp = input()
-                    try:
-                        inp = int(inp)
-                        if inp >= 1 and inp <= len(members):
-                            while True:
-                                inp1 = input("Enter percentage or \"0\" to cancel: ")
-                                try:
-                                    inp1 = round(float(inp1),2)
-                                    if inp1 == 0:
-                                        break
-                                    elif inp1 > 0 and inp1 <= (remaining + members[list(members.keys())[inp-1]]*100):
-                                        members[list(members.keys())[inp-1]] = round(inp1/100, 4)
-                                        break
-                                    else:
-                                        print("Value must be greater than 0 and lower or equal to remaining percentage")
-                                except:
-                                    print("Wrong input. Try again")
-                        else:
-                            print("Wrong input. Try again")
-                    except:
-                        if inp == "":
-                            remaining = round((value - sum(percentage*value for percentage in members.values()))/value,4)*100
-                            if remaining == 0:
-                                for mem in members:
-                                    members[mem] = round(members[mem]*value,2)
-                                if sum(members.values()) != value:
-                                    members[list(members)[random.randint(0, len(members)-1)]] += round((value - sum(members.values())), 2)
-                                return members
-                            else:
-                                print("Remaining money to split")
-                        else:
-                            print("Wrong input. Try again")
-            def CalculateUnequallyShares(members, value):
-                while True:
-                    print("Choose person to change share or type enter to confirm selection")
-                    for i in range(len(members)):
-                        mem = list(members.keys())[i]
-                        print("({}) {} {}: {} shares".format(i+1, mem.name, mem.surname, members[mem]))
-                    inp = input()
-                    try:
-                        inp = int(inp)
-                        if inp >= 1 and inp <= len(members):
-                            while True:
-                                inp1 = input("Enter share or \"0\" to cancel: ")
-                                try:
-                                    inp1 = int(inp1)
-                                    if inp1 == 0:
-                                        break
-                                    elif inp1 > 0:
-                                        members[list(members.keys())[inp-1]] = inp1
-                                        break
-                                    else:
-                                        print("Value must be greater than 0")
-                                except:
-                                    print("Wrong input. Try again")
-                        else:
-                            print("Wrong input. Try again")
-                    except:
-                        if inp == "":
-                            if 0 in members.values():
-                                print("People without share remaining")
-                            else:
-                                shares = sum(members.values())
-                                for mem in members:
-                                    members[mem] = round((members[mem]/shares)*value,2)
-                                if sum(members.values()) != value:
-                                    members[list(members)[random.randint(0, len(members)-1)]] += round((value - sum(members.values())), 2)
-                                return members
-                        else:
-                            print("Wrong input. Try again")
-            match type:
-                case "equally":
-                    return CalculateEqually(self, members, value)
-                case "unequally by value":
-                    return CalculateUnequallyValue(self, members, value)
-                case "unequally by percentage":
-                    return CalculateUnequallyPercentage(members, value)
-                case "unequally by shares":
-                    return CalculateUnequallyShares(members, value)
-            
+    def AddExpenseMenu(self):  
         if len(self.members) == 0:
             print("There are no members in group")
             return
@@ -503,22 +272,22 @@ class Group:
             name = input("Name of expense: ")
             if name == "0":
                 return
-            category = SelectCategory()
+            category = self.SelectCategory()
             if category == "0":
                 return
-            value = SelectValue(self)
+            value = self.SelectValue()
             if value == 0:
                 return
-            payer = SelectPayer(self)
+            payer = self.SelectPayer()
             if payer == "0":
                 return 
-            members = SelectMembers(self)
+            members = self.SelectMembers()
             if members == "0":
                 return
-            type = SelectType()
+            type = self.SelectType()
             if type == "0":
                 return
-            members = SplitingMenu(self, type, members, value)
+            members = self.SplitingMenu(type, members, value)
             while True:
                 print("Type \"1\" to confirm expense or \"2\" to enter it again")
                 print("{} - {} - {}{}".format(name, category, value, self.currency))
@@ -537,6 +306,236 @@ class Group:
                         break
                     case _:
                         print("Wrong input. Try again")
+    def SelectCategory(self):
+        categories = ["General", "Food and drink", "Entertainment", "Home", "Life", "Transport", "Utilities", "Business", "Custom category"]
+        while True:
+            for i in range(len(categories)):
+                print("({}) {}".format(i+1, categories[i]))
+            inp = input()
+            try:
+                inp = int(inp)
+                if inp == 0:
+                    return "0"
+                elif inp >= 1 and inp < len(categories):
+                    return categories[inp-1]
+                elif inp == len(categories):
+                    return input("Category: ")
+                else:
+                    print("Wrong input. Try again")
+            except:
+                print("Wrong input. Try again")
+    def SelectValue(self):
+        while True:
+            value = input("Value ({}): ".format(self.currency))
+            try:
+                value = round(float(value),2)
+                if value < 0:
+                    print("Wrong input. Try again")
+                else:
+                    return value
+            except:
+                print("Wrong input. Try again")
+    def SelectPayer(self):
+        while True:
+            print("Choose payer: ")
+            for i in range(len(self.members)):
+                member = list(self.members)[i]
+                print("({}) {} {}".format(i+1, member.name, member.surname))
+            inp = input()
+            try:
+                inp = int(inp)
+                if inp == 0:
+                    return "0"
+                elif inp >= 1 and inp <= len(self.members):
+                    return list(self.members)[inp-1]
+                else:
+                    print("Wrong input. Try again")
+            except:
+                print("Wrong input. Try again")
+    def SelectMembers(self):
+        chosen_members = {mem:0 for mem in list(self.members)}
+        while True:
+            print("Choose who is involved in this expense (green - chosen, red - not chosen):")
+            print("Press enter to confirm selection")
+            print("(a) Select/Discard everybody")
+            for i in range(len(self.members)):
+                member = list(self.members)[i]
+                if chosen_members[member] == 0:
+                    prRed("({}) {} {}".format(i+1, member.name, member.surname))
+                else:
+                    prGreen("({}) {} {}".format(i+1, member.name, member.surname))
+            inp = input()
+            try:
+                inp = int(inp)
+                if inp == 0:
+                    return "0"
+                elif inp >= 1 and inp <= len(self.members):
+                    chosen_members[list(self.members)[inp-1]] = abs(chosen_members[list(self.members)[inp-1]]-1)
+                else:
+                    print("Wrong input. Try again")
+            except:
+                if inp == "a":
+                    if 0 in list(chosen_members.values()):
+                        for chosen in chosen_members:
+                            chosen_members[chosen] = 1
+                    else:
+                        for chosen in chosen_members:
+                            chosen_members[chosen] = 0
+                elif inp == "":
+                    if all(num == 0 for num in list(chosen_members.values())):
+                        print("Someone needs to be picked")
+                    else:
+                        return {user:0 for user in list(chosen_members) if chosen_members[user] == 1}
+                else:
+                    print("Wrong input. Try again")
+    def SelectType(self):
+        types = ["equally", "unequally by value", "unequally by percentage", "unequally by shares"]
+        while True:
+            print("Choose a way to split expense")
+            for i in range(len(types)):
+                print("({}) {}".format(i+1, types[i]))
+            inp = input()
+            try:
+                inp = int(inp)
+                if inp == 0:
+                    return "0"
+                elif inp >= 1 and inp <= len(types):
+                    return types[inp - 1]
+                else:
+                    print("Wrong input. Try again")
+            except:
+                print("Wrong input. Try again")
+    def SplitingMenu(self, type, members, value):
+        match type:
+            case "equally":
+                return self.CalculateEqually(members, value)
+            case "unequally by value":
+                return self.CalculateUnequallyValue(members, value)
+            case "unequally by percentage":
+                return self.CalculateUnequallyPercentage(members, value)
+            case "unequally by shares":
+                return self.CalculateUnequallyShares(members, value)
+    def CalculateEqually(self, members, value):
+        _value_by_person = round(value/len(members),2)
+        for mem in members:
+            members[mem] = _value_by_person
+        if sum(members.values()) != value:
+            members[list(self.members)[random.randint(0, len(members)-1)]] += round((value - sum(members.values())), 2)
+        return members
+    def CalculateUnequallyValue(self, members, value):
+        while True:
+            print("Choose person to change value or type enter to confirm selection")
+            remaining = round(value - sum(members.values()),2)
+            print("Remaining amount: {}{}".format(remaining, self.currency))
+            for i in range(len(members)):
+                mem = list(members.keys())[i]
+                print("({}) {} {}: {}{}".format(i+1, mem.name, mem.surname, members[mem], self.currency))
+            inp = input()
+            try:
+                inp = int(inp)
+                if inp >= 1 and inp <= len(members):
+                    while True:
+                        inp1 = input("Enter value or \"0\" to cancel: ")
+                        try:
+                            inp1 = round(float(inp1),2)
+                            if inp1 == 0:
+                                break
+                            elif inp1 > 0 and inp1 <= (remaining + members[list(members.keys())[inp-1]]):
+                                members[list(members.keys())[inp-1]] = round(inp1, 2)
+                                break
+                            else:
+                                print("Value must be greater than 0 and lower or equal to remaining amount")
+                        except:
+                            print("Wrong input. Try again")
+                else:
+                    print("Wrong input. Try again")
+            except:
+                if inp == "":
+                    remaining = round(value - sum(members.values()),2)
+                    if remaining == 0:
+                        return members
+                    else:
+                        print("Remaining money to split")
+                else:
+                    print("Wrong input. Try again")
+    def CalculateUnequallyPercentage(self, members, value):
+        while True:
+            print("Choose person to change percentage or type enter to confirm selection")
+            remaining = round((value - sum(percentage*value for percentage in members.values()))/value,4)*100
+            print("Remaining % of value: {}%".format(remaining))
+            for i in range(len(members)):
+                mem = list(members.keys())[i]
+                print("({}) {} {}: {}%".format(i+1, mem.name, mem.surname, members[mem]*100))
+            inp = input()
+            try:
+                inp = int(inp)
+                if inp >= 1 and inp <= len(members):
+                    while True:
+                        inp1 = input("Enter percentage or \"0\" to cancel: ")
+                        try:
+                            inp1 = round(float(inp1),2)
+                            if inp1 == 0:
+                                break
+                            elif inp1 > 0 and inp1 <= (remaining + members[list(members.keys())[inp-1]]*100):
+                                members[list(members.keys())[inp-1]] = round(inp1/100, 4)
+                                break
+                            else:
+                                print("Value must be greater than 0 and lower or equal to remaining percentage")
+                        except:
+                            print("Wrong input. Try again")
+                else:
+                    print("Wrong input. Try again")
+            except:
+                if inp == "":
+                    remaining = round((value - sum(percentage*value for percentage in members.values()))/value,4)*100
+                    if remaining == 0:
+                        for mem in members:
+                            members[mem] = round(members[mem]*value,2)
+                        if sum(members.values()) != value:
+                            members[list(members)[random.randint(0, len(members)-1)]] += round((value - sum(members.values())), 2)
+                        return members
+                    else:
+                        print("Remaining money to split")
+                else:
+                    print("Wrong input. Try again")
+    def CalculateUnequallyShares(self, members, value):
+        while True:
+            print("Choose person to change share or type enter to confirm selection")
+            for i in range(len(members)):
+                mem = list(members.keys())[i]
+                print("({}) {} {}: {} shares".format(i+1, mem.name, mem.surname, members[mem]))
+            inp = input()
+            try:
+                inp = int(inp)
+                if inp >= 1 and inp <= len(members):
+                    while True:
+                        inp1 = input("Enter share or \"0\" to cancel: ")
+                        try:
+                            inp1 = int(inp1)
+                            if inp1 == 0:
+                                break
+                            elif inp1 > 0:
+                                members[list(members.keys())[inp-1]] = inp1
+                                break
+                            else:
+                                print("Value must be greater than 0")
+                        except:
+                            print("Wrong input. Try again")
+                else:
+                    print("Wrong input. Try again")
+            except:
+                if inp == "":
+                    if 0 in members.values():
+                        print("People without share remaining")
+                    else:
+                        shares = sum(members.values())
+                        for mem in members:
+                            members[mem] = round((members[mem]/shares)*value,2)
+                        if sum(members.values()) != value:
+                            members[list(members)[random.randint(0, len(members)-1)]] += round((value - sum(members.values())), 2)
+                        return members
+                else:
+                    print("Wrong input. Try again")
     def SelectCurrency(self):
         while True:
             print("Select currency:")
