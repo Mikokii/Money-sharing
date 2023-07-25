@@ -65,6 +65,7 @@ class Group:
         list_groups.append(self)
         self.members = OrderedDict()
         self.expense_matrix = []
+        self.expense_simplify_matrix = []
         self.list_expenses = []
         self.calculation_type = "normal"    #normal or simplify
         self.currency = None
@@ -153,7 +154,7 @@ class Group:
             self.SelectCurrency()
         else:
             print("Group members are not settled!")
-            print("Changing currency will convert existing debts to new currency (it want affect currency of expenses in history)")
+            print("Changing currency will convert existing debts to new currency (it won't affect currency of expenses in history)")
             print("Type \"0\" to continue or anything else to cancel this action")
             conf = input()
             if conf == "0":
@@ -250,22 +251,16 @@ class Group:
                 return
     def ShowBalanceMember(self, member):
         if self.calculation_type == "simplify":
+            self.CalculateSimplifyMatrix()
             value = self.members[member]
             if value == 0:
                 print("{} {} is settled".format(member.name, member.surname))
             elif value < 0:
                 print("{} {} owes {}{}".format(member.name, member.surname, -value, self.currency))
-                            #
-                            #
-                            #
-                            #
+                self.CalculateSimplifyBalance(member)
             else:
                 print("{} {} is owed {}{}".format(member.name, member.surname, value, self.currency))
-                            #
-                            #
-                            #
-                            #
-                            #
+                self.CalculateSimplifyBalance(member)
         else:
             balance_positive = 0
             balance_negative = 0
@@ -297,6 +292,36 @@ class Group:
             value = self.expense_matrix[index][i]
             member2 = list(self.members)[i]
             if value < 0:
+                print("{} {} owes {}{} to {} {}".format(member.name, member.surname, -value, self.currency, member2.name, member2.surname))
+    def CalculateSimplifyMatrix(self):
+        members_copy = self.members.copy()
+        self.expense_simplify_matrix = []
+        for i in range(len(self.expense_matrix)):
+            self.expense_simplify_matrix.append([])
+            for _ in range(len(self.expense_matrix)):
+                self.expense_simplify_matrix[i].append(0)
+        while not all(num == 0 for num in list(members_copy.values())):
+            list_values = list(members_copy.values())
+            max_value = max(list_values)
+            min_value = min(list_values)
+            index_max = list_values.index(max_value)
+            index_min = list_values.index(min_value)
+            if max_value >= abs(min_value):
+                diff = abs(min_value)
+            else:
+                diff = abs(max_value)
+            self.expense_simplify_matrix[index_max][index_min] += diff
+            self.expense_simplify_matrix[index_min][index_max] -= diff
+            members_copy[list(members_copy)[index_max]] -= diff
+            members_copy[list(members_copy)[index_min]] += diff
+    def CalculateSimplifyBalance(self, member):
+        index = list(self.members).index(member)
+        for i in range(len(self.expense_simplify_matrix)):
+            value = self.expense_simplify_matrix[index][i]
+            member2 = list(self.members)[i]
+            if value > 0:
+                print("{} {} owes {}{} to {} {}".format(member2.name, member2.surname, value, self.currency, member.name, member.surname))
+            elif value < 0:
                 print("{} {} owes {}{} to {} {}".format(member.name, member.surname, -value, self.currency, member2.name, member2.surname))
     def AddExpenseMenu(self):  
         if len(self.members) == 0:
@@ -806,8 +831,6 @@ while True:
     else:
         print("Wrong input. Try again")
 
-# Add remaining options to group info (all members' balance)
-# Add calculating transfers in both ways (also not finished showing balance)
 # Add option to settle up two users
-# Add specific transfers in Show balance member - simplify
+# Add saving data
 # ... 
