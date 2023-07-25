@@ -124,7 +124,8 @@ class Group:
                 case "0":
                     self.AddExpenseMenu()
                 case "1":
-                    pass # ADD !!!!!!
+                    for mem in self.members:
+                        self.ShowBalanceMember(mem)
                 case "2":
                     self.ShowBalanceMemberMenu() # Check !!!!!!
                 case "3":
@@ -283,7 +284,8 @@ class Group:
                 self.CalculateNormalBalance(member)
             else:
                 print("{} {} owes {}{} and is owed {}{}".format(member.name, member.surname, balance_negative, self.currency, balance_positive, self.currency))
-                self.CalculateNormalBalance(member)  
+                self.CalculateNormalBalance(member)
+        print("")
     def CalculateNormalBalance(self, member):
         index = list(self.members).index(member)
         for i in range(len(self.expense_matrix)):
