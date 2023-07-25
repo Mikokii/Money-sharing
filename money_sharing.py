@@ -91,8 +91,8 @@ class Group:
             mem.total[currency] += round(expense.members[mem],2)
             if mem != expense.payer:
                 index_member = list(self.members).index(mem)
-                self.expense_matrix[index][index_member] -= round(expense.members[mem],2)
-                self.expense_matrix[index_member][index] += round(expense.members[mem],2)
+                self.expense_matrix[index_member][index] -= round(expense.members[mem],2)
+                self.expense_matrix[index][index_member] += round(expense.members[mem],2)
     def ChangeCalculationType(self):
         if self.calculation_type == "normal":
             self.calculation_type = "simplify"
@@ -126,7 +126,7 @@ class Group:
                 case "1":
                     pass # ADD !!!!!!
                 case "2":
-                    self.ShowBalanceMember() # Check !!!!!!
+                    self.ShowBalanceMemberMenu() # Check !!!!!!
                 case "3":
                     self.ShowMembers()
                 case "4":
@@ -223,7 +223,7 @@ class Group:
                     print("Wrong input. Try again")
             except:
                 print("Wrong input. Try again")
-    def ShowBalanceMember(self):
+    def ShowBalanceMemberMenu(self):
         if len(self.members) == 0:
             print("There are no members in this group")
             return
@@ -236,23 +236,7 @@ class Group:
             try:
                 inp = int(inp)
                 if inp >= 1 and inp <= len(self.members):
-                    member = list(self.members)[inp-1]
-                    value = self.members[member]
-                    if value == 0:
-                        print("{} {} is settled".format(member.name, member.surname))
-                    elif value < 0:
-                        print("{} {} owes {}{}".format(member.name, member.surname, -value, self.currency))
-                        #
-                        #
-                        #
-                        #
-                    else:
-                        print("{} {} is owed {}{}".format(member.name, member.surname, value, self.currency))
-                        #
-                        #
-                        #
-                        #
-                        #
+                    self.ShowBalanceMember(list(self.members)[inp-1])                 
                     print(("Type \"0\" to see another member's balance or anything else to go back to group menu"))
                     inp = input()
                     if inp == "0":
@@ -263,6 +247,55 @@ class Group:
                     return
             except:
                 return
+    def ShowBalanceMember(self, member):
+        if self.calculation_type == "simplify":
+            value = self.members[member]
+            if value == 0:
+                print("{} {} is settled".format(member.name, member.surname))
+            elif value < 0:
+                print("{} {} owes {}{}".format(member.name, member.surname, -value, self.currency))
+                            #
+                            #
+                            #
+                            #
+            else:
+                print("{} {} is owed {}{}".format(member.name, member.surname, value, self.currency))
+                            #
+                            #
+                            #
+                            #
+                            #
+        else:
+            balance_positive = 0
+            balance_negative = 0
+            for value in self.expense_matrix[list(self.members).index(member)]:
+                if value > 0:
+                    balance_positive += value
+                else:
+                    balance_negative -= value
+            if balance_positive == 0 and balance_negative == 0:
+                print("{} {} is settled".format(member.name, member.surname))
+            elif balance_positive == 0:
+                print("{} {} owes {}{}".format(member.name, member.surname, balance_negative, self.currency))
+                self.CalculateNormalBalance(member)
+            elif balance_negative == 0:
+                print("{} {} is owed {}{}".format(member.name, member.surname, balance_positive, self.currency))
+                self.CalculateNormalBalance(member)
+            else:
+                print("{} {} owes {}{} and is owed {}{}".format(member.name, member.surname, balance_negative, self.currency, balance_positive, self.currency))
+                self.CalculateNormalBalance(member)  
+    def CalculateNormalBalance(self, member):
+        index = list(self.members).index(member)
+        for i in range(len(self.expense_matrix)):
+            value = self.expense_matrix[index][i]
+            member2 = list(self.members)[i]
+            if value > 0:
+                print("{} {} owes {}{} to {} {}".format(member2.name, member2.surname, value, self.currency, member.name, member.surname))
+        for i in range(len(self.expense_matrix)):
+            value = self.expense_matrix[index][i]
+            member2 = list(self.members)[i]
+            if value < 0:
+                print("{} {} owes {}{} to {} {}".format(member.name, member.surname, -value, self.currency, member2.name, member2.surname))
     def AddExpenseMenu(self):  
         if len(self.members) == 0:
             print("There are no members in group")
@@ -772,8 +805,7 @@ while True:
         print("Wrong input. Try again")
 
 # Add remaining options to group info (all members' balance)
-# Add another type of expenses
 # Add calculating transfers in both ways (also not finished showing balance)
 # Add option to settle up two users
-# Add specific transfers in Show balance member
+# Add specific transfers in Show balance member - simplify
 # ... 
