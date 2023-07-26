@@ -3,6 +3,7 @@ import random
 
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
 def prGreen(skk): print("\033[92m {}\033[00m" .format(skk))
+def prGray(skk): print("\033[90m {}\033[00m" .format(skk))
 
 class User:
     def __init__(self, name, surname, username, email):
@@ -80,21 +81,27 @@ class Group:
     def AddExpense(self, name, value, currency, payer, members, category, type):
         expense = Expense(name, value, currency, payer, members, category, type)
         self.list_expenses.append(expense)
-        if not (currency in self.total.keys()):
-            self.total[currency] = 0
-        self.total[currency] += round(value,2)
+        if category != "Settlement":
+            if not (currency in self.total.keys()):
+                self.total[currency] = 0
+            self.total[currency] += round(value,2)
         self.members[payer] += round(value,2)
         index = list(self.members).index(payer)
         for mem in expense.members:
             self.members[mem] -= round(expense.members[mem],2)
-            if not (currency in mem.total.keys()):
-                mem.total[currency] = 0
-            mem.total[currency] += round(expense.members[mem],2)
+            if category != "Settlement":
+                if not (currency in mem.total.keys()):
+                    mem.total[currency] = 0
+                mem.total[currency] += round(expense.members[mem],2)
             if mem != expense.payer:
                 index_member = list(self.members).index(mem)
                 self.expense_matrix[index_member][index] -= round(expense.members[mem],2)
                 self.expense_matrix[index][index_member] += round(expense.members[mem],2)
     def ChangeCalculationType(self):
+        if self.IsSettled():
+            for i in range(len(self.expense_matrix)):
+                for j in range(len(self.expense_matrix)):
+                    self.expense_matrix[i][j] = 0
         if self.calculation_type == "normal":
             self.calculation_type = "simplify"
         else:
@@ -112,7 +119,7 @@ class Group:
             print("Choose action:")
             print("(0) Add new expense")
             print("(1) Show balance of all members")
-            print("(2) Show balance of certain member (in this group)")
+            print("(2) Settle up members")
             print("(3) Show all members")
             print("(4) Add new member")
             print("(5) Show expense history")
@@ -125,10 +132,9 @@ class Group:
                 case "0":
                     self.AddExpenseMenu()
                 case "1":
-                    for mem in self.members:
-                        self.ShowBalanceMember(mem)
+                    self.ShowBalanceAll()
                 case "2":
-                    self.ShowBalanceMemberMenu() # Check !!!!!!
+                    self.SettleUpMenu()
                 case "3":
                     self.ShowMembers()
                 case "4":
@@ -189,6 +195,12 @@ class Group:
                     return
                 else:
                     print("Wrong input. Try again")
+    def ShowBalanceAll(self):
+        if len(self.members) == 0:
+            print("There are no members in this group")
+            return
+        for mem in self.members:
+            self.ShowBalanceMember(mem)
     def ShowMembers(self):
         if len(self.members) == 0:
             print("There are no members in this group")
@@ -225,24 +237,27 @@ class Group:
                     print("Wrong input. Try again")
             except:
                 print("Wrong input. Try again")
-    def ShowBalanceMemberMenu(self):
+    def SettleUpMenu(self):
         if len(self.members) == 0:
             print("There are no members in this group")
             return
         while True:
-            print("Type corresponding number of member to see his/her balance or anything else to quit")
+            print("Type number of member to see detailed info and settle up his/her expense(s) or anything else to quit")
             for i in range(len(self.members)):
                 member = list(self.members)[i]
-                print("({}) {} {}".format(i+1, member.name, member.surname))
+                print("({}) {} {} - Balance: {}{}".format(i+1, member.name, member.surname, self.members[member], self.currency))
             inp = input()
             try:
                 inp = int(inp)
                 if inp >= 1 and inp <= len(self.members):
-                    self.ShowBalanceMember(list(self.members)[inp-1])                 
-                    print(("Type \"0\" to see another member's balance or anything else to go back to group menu"))
-                    inp = input()
-                    if inp == "0":
+                    member = list(self.members)[inp-1]
+                    self.ShowBalanceMember(member)                 
+                    print(("Type \"1\" to settle up this member, \"0\" select another member or anything else to go back to group menu"))
+                    inp1 = input()
+                    if inp1 == "0":
                         continue
+                    elif inp1 == "1":
+                        self.SettleUp(member)
                     else:
                         return
                 else:
@@ -323,6 +338,57 @@ class Group:
                 print("{} {} owes {}{} to {} {}".format(member2.name, member2.surname, value, self.currency, member.name, member.surname))
             elif value < 0:
                 print("{} {} owes {}{} to {} {}".format(member.name, member.surname, -value, self.currency, member2.name, member2.surname))
+    def SettleUp(self, member):
+        while True:
+            if self.calculation_type == "normal":
+                matrix = self.expense_matrix
+                balance_positive = 0
+                balance_negative = 0
+                for value in self.expense_matrix[list(self.members).index(member)]:
+                    if value > 0:
+                        balance_positive += value
+                    else:
+                        balance_negative -= value
+                if balance_positive == 0 and balance_negative == 0:
+                    print("{} {} is settled".format(member.name, member.surname))
+                    return
+            else:
+                matrix = self.expense_simplify_matrix
+                if self.members[member] == 0:
+                    print("{} {} is settled".format(member.name, member.surname))
+                    return
+            print("Choose member to settle up with or \"0\" to cancel action")
+            index = list(self.members.keys()).index(member)
+            not_settled_dict = {}
+            count = 1
+            for i in range(len(matrix)):
+                if matrix[index][i] == 0:
+                    continue
+                else:
+                    member2 = list(self.members.keys())[i]
+                    print("({}) {} {}".format(count, member2.name, member2.surname))
+                    not_settled_dict[count] = member2
+                    count += 1
+            inp = input()
+            try:
+                inp = int(inp)
+                if inp == 0:
+                    return
+                elif inp >= 1 and inp < count:
+                    member2 = not_settled_dict[inp]
+                    index2 = list(self.members.keys()).index(member2)
+                    value = matrix[index][index2]
+                    if value > 0:
+                        payer = member2
+                        members = {member:value}
+                    else:
+                        payer = member
+                        members = {member2:-value}
+                    self.AddExpense("Settlement", abs(value), self.currency, payer, members, "Settlement", "")         
+                else:
+                    print("Wrong input. Try again")
+            except:
+                print("Wrong input. Try again")   
     def AddExpenseMenu(self):  
         if len(self.members) == 0:
             print("There are no members in group")
@@ -658,11 +724,15 @@ class Expense:
         self.type = type
     def ShowExpense(self):
         print("Type anything to exit")
-        print("\"{0}\"   -   category: {1}".format(self.name, self.category))
-        print("{0}{1}".format(self.value,self.currency))
-        print("{0} {1} paid {2}{3}".format(self.payer.name, self.payer.surname, self.value, self.currency))
-        for member in self.members:
-            print("{0} {1} owes {2}{3}".format(member.name, member.surname, self.members[member], self.currency))
+        if self.category == "Settlement":
+            print("\"{}\"".format(self.name))
+            print("{} {} paid {} {} {}{}".format(self.payer.name, self.payer.surname, list(self.members.keys())[0].name, list(self.members.keys())[0].surname, self.value, self.currency))
+        else:
+            print("\"{0}\"   -   category: {1}".format(self.name, self.category))
+            print("{0}{1}".format(self.value,self.currency))
+            print("{0} {1} paid {2}{3}".format(self.payer.name, self.payer.surname, self.value, self.currency))
+            for member in self.members:
+                print("{0} {1} owes {2}{3}".format(member.name, member.surname, self.members[member], self.currency))
         input()
         return   
 
@@ -831,6 +901,5 @@ while True:
     else:
         print("Wrong input. Try again")
 
-# Add option to settle up two users
 # Add saving data
 # ... 
