@@ -1,5 +1,8 @@
 from collections import OrderedDict
 import random
+import pickle
+from threading import Timer
+import os
 
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
 def prGreen(skk): print("\033[92m {}\033[00m" .format(skk))
@@ -735,6 +738,27 @@ class Expense:
                 print("{0} {1} owes {2}{3}".format(member.name, member.surname, self.members[member], self.currency))
         input()
         return   
+class RepeatedTimer:
+    def __init__(self, interval, function, *args, **kwargs):
+        self._timer     = None
+        self.interval   = interval
+        self.function   = function
+        self.args       = args
+        self.kwargs     = kwargs
+        self.is_running = False
+        self.start()
+    def _run(self):
+        self.is_running = False
+        self.start()
+        self.function(*self.args, **self.kwargs)
+    def start(self):
+        if not self.is_running:
+            self._timer = Timer(self.interval, self._run)
+            self._timer.start()
+            self.is_running = True
+    def stop(self):
+        self._timer.cancel()
+        self.is_running = False
 
 def ShowGroups():
     while True:
@@ -760,6 +784,8 @@ def ShowGroups():
             elif inp == "m":
                 break
             elif inp == "e":
+                saving_cycle.stop()
+                SaveToFile()
                 exit()
             else:
                 print("Wrong input. Try again")
@@ -818,6 +844,8 @@ def ShowUsers():
             elif inp == "m":
                 break
             elif inp == "e":
+                saving_cycle.stop()
+                SaveToFile()
                 exit()
             else:
                 print("Wrong input. Try again")
@@ -882,10 +910,24 @@ def DeleteUser():
             else:
                 print("Wrong input. Try again")
 
+def SaveToFile():
+    with open("data.pkl", "wb") as file:
+        pickle.dump([list_users, list_groups], file)
+
+def LoadFromFile():
+    global list_users, list_groups
+    with open("data.pkl", "rb") as file:
+        data = pickle.load(file)
+        list_users = data[0]
+        list_groups = data[1]
+
 list_groups = []
 list_users = []
 
 while True:
+    if os.path.isfile("data.pkl"):
+        LoadFromFile()
+    saving_cycle = RepeatedTimer(5, SaveToFile)
     print("----------------------------------------------------------------")
     print("Type according number")
     print("(1) Show list of groups")
@@ -897,9 +939,8 @@ while True:
     elif inp == "2":
         ShowUsers()
     elif inp == "3":
+        saving_cycle.stop()
+        SaveToFile()
         exit()
     else:
         print("Wrong input. Try again")
-
-# Add saving data
-# ... 
