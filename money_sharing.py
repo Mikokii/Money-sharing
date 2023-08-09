@@ -1,7 +1,7 @@
 from collections import OrderedDict
+from threading import Timer
 import random
 import pickle
-from threading import Timer
 import os
 
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
@@ -63,6 +63,8 @@ class User:
             print("Groups: ")
             for group in self.groups:
                 print("\"{}\"".format(group.name))
+        if input() == "exit":
+            QuitApp()
 class Group:
     def __init__(self, name):
         self.name = name
@@ -72,7 +74,7 @@ class Group:
         self.expense_simplify_matrix = []
         self.list_expenses = []
         self.calculation_type = "normal"    #normal or simplify
-        self.currency = None
+        self.currency = "$"
         self.SelectCurrency()
         self.total = {}     #{currency:value, ...}
     def AddMember(self, member):
@@ -107,8 +109,12 @@ class Group:
                     self.expense_matrix[i][j] = 0
         if self.calculation_type == "normal":
             self.calculation_type = "simplify"
+            print("Changed calculation type to \"simplify\"")
         else:
             self.calculation_type = "normal"
+            print("Changed calculation type to \"normal\"")
+        if input() == "exit":
+            QuitApp()
     def IsSettled(self):
         for mem in self.members:
             if self.members[mem] != 0:
@@ -116,105 +122,137 @@ class Group:
         return True
     def ShowGroupInfo(self):
          while True:
+            print("\n----------------------------------------------------------------")
             print("\"{}\"".format(self.name))
             print("Group expense calculation type: {}".format(self.calculation_type))
             print("Group currency: {}".format(self.currency))
-            print("Choose action:")
-            print("(0) Add new expense")
-            print("(1) Show balance of all members")
-            print("(2) Settle up members")
-            print("(3) Show all members")
-            print("(4) Add new member")
-            print("(5) Show expense history")
-            print("(6) Show total spendings of group")
-            print("(7) Change expense calculation type (to see diffrence between calculation types enter \"h\")")
-            print("(8) Change currency of the group")
-            print("(9) Go back to group list")
+            print("--------------------------------")
+            print("(1) Add new expense")
+            print("(2) Show balance of all members")
+            print("(3) Settle up members")
+            print("(4) Show all members")
+            print("(5) Add new member")
+            print("(6) Show expense history")
+            print("(7) Show total spendings of group")
+            print("(8) Change expense calculation type (to see diffrence between calculation types type \"h\")")
+            print("(9) Change currency of the group")
+            print("(0) Go back to group list")
+            print("----------------------------------------------------------------")
             inp = input()
             match inp:
-                case "0":
-                    self.AddExpenseMenu()
                 case "1":
-                    self.ShowBalanceAll()
+                    self.AddExpenseMenu()
                 case "2":
-                    self.SettleUpMenu()
+                    self.ShowBalanceAll()
                 case "3":
-                    self.ShowMembers()
+                    self.SettleUpMenu()
                 case "4":
-                    self.AddMemberMenu()
+                    self.ShowMembers()
                 case "5":
-                    self.ShowExpensesHistory()
+                    self.AddMemberMenu()
                 case "6":
-                    self.ShowTotalSpendings()
+                    self.ShowExpensesHistory()
                 case "7":
-                    self.ChangeCalculationType()
+                    self.ShowTotalSpendings()
                 case "8":
-                    self.ChangeCurrency()
+                    self.ChangeCalculationType()
                 case "9":
+                    self.ChangeCurrency()
+                case "0":
                     return
                 case "h":
                     print("Normal type of expense calculation type is the intuitive way of calculating who owes who what amount of money.")
                     print("Simplify type of expense calculation reduce the amount of needed transfers between users, but can be unintuitive.")
                     print("Example: A owes B 5$ and B owes C 5$. Simplify type of expense calculation reduce trasfers number from 2 to 1 - A owes C 5$.")
+                    if input() == "exit":
+                        QuitApp()
+                case "exit":
+                    QuitApp()
                 case _:
                     print("Wrong input. Try again")
     def ChangeCurrency(self):
         if self.IsSettled():
             self.SelectCurrency()
+            print("Currency changed to {}".format(self.currency))
+            if input() == "exit":
+                QuitApp()
         else:
             print("Group members are not settled!")
             print("Changing currency will convert existing debts to new currency (it won't affect currency of expenses in history)")
-            print("Type \"0\" to continue or anything else to cancel this action")
-            conf = input()
-            if conf == "0":
+            print("Type \"1\" to continue or anything else to cancel this action")
+            inp = input()
+            if inp == "1":
                 self.SelectCurrency()
+                print("Currency changed to {}".format(self.currency))
+                if input() == "exit":
+                    QuitApp()
+            elif inp == "exit":
+                QuitApp()
             else:
-                pass
+                return
     def ShowTotalSpendings(self):
         if len(self.list_expenses) == 0:
             print("There are no expenses")
-        else:
-            print("Total spendings:")
-            for currency, value in sorted(self.total.items(), key = lambda item: item[1]):
-                print(value, currency)
+            if input() == "exit":
+                QuitApp()
+            return
+        print("Total spendings:")
+        for currency, value in sorted(self.total.items(), key = lambda item: item[1]):
+            print(value, currency)
+        if input() == "exit":
+            QuitApp()
     def ShowExpensesHistory(self):
         if len(self.list_expenses) == 0:
             print("There are no expenses")
+            if input() == "exit":
+                QuitApp()
             return
         while True:
-            print("Type number to see more information about certain expense or \"e\" to go back to group menu")
+            print("\n----------------------------------------------------------------")
+            print("Type number to see more information about particular expense or \"0\" to go back to group menu")
             for i in range(len(self.list_expenses)-1, -1, -1):
                 expense = self.list_expenses[i]
-                print("({0}) \"{1}\" - {2}{3} - {4}".format(len(self.list_expenses)-i-1, expense.name, expense.value, expense.currency, expense.category))
+                print("({0}) \"{1}\" - {2}{3} - {4}".format(len(self.list_expenses)-i, expense.name, expense.value, expense.currency, expense.category))
+            print("----------------------------------------------------------------")
             inp = input()
             try:
                 inp = int(inp)
-                if inp >= 0 and inp < len(self.list_expenses):
-                    self.list_expenses[len(self.list_expenses)-inp-1].ShowExpense()
-                else:
-                    print("Wrong input. Try again")
-            except:
-                if inp == "e":
+                if inp >= 1 and inp <= len(self.list_expenses):
+                    self.list_expenses[len(self.list_expenses)-inp].ShowExpense()
+                elif inp == 0:
                     return
                 else:
                     print("Wrong input. Try again")
+            except ValueError:
+                if inp == "exit":
+                    QuitApp()
+                print("Wrong input. Try again")
     def ShowBalanceAll(self):
         if len(self.members) == 0:
             print("There are no members in this group")
+            if input() == "exit":
+                QuitApp()
             return
+        print("\n----------------------------------------------------------------")
         for mem in self.members:
             self.ShowBalanceMember(mem)
+        print("----------------------------------------------------------------")
+        if input() == "exit":
+            QuitApp()
     def ShowMembers(self):
         if len(self.members) == 0:
             print("There are no members in this group")
+            if input() == "exit":
+                QuitApp()
             return
         for member in self.members:
             print("{0} {1}".format(member.name, member.surname))
+        if input() == "exit":
+            QuitApp
     def AddMemberMenu(self):
         while True:
-            print("Choose existing user to be added or add new user")
-            print("(c) Cancel action")
-            print("(0) Add new user")
+            print("\n----------------------------------------------------------------")
+            print("Choose existing user or press enter add new user")
             list_not_in_group = []
             for user in list_users:
                 if not (user in list(self.members)):
@@ -222,51 +260,72 @@ class Group:
             for i in range(len(list_not_in_group)):
                 user = list_not_in_group[i]
                 print("({0}) {1} {2}".format(i+1, user.name, user.surname))
+            print("(0) Return to group menu")
+            print("----------------------------------------------------------------")
             inp = input()
-            if inp == "c":
-                return
             try:
                 inp = int(inp)
-                if inp == 0:
-                    if AddUser():
-                        self.AddMember(list_users[-1])
-                        print("Added {} {} to group".format(list_users[-1].name, list_users[-1].surname))
-                        return
-                elif inp >= 1 and inp <= len(list_not_in_group):
+                if inp >= 1 and inp <= len(list_not_in_group):
                     self.AddMember(list_not_in_group[inp-1])
                     print("Added {} {} to group".format(list_not_in_group[i-1].name, list_not_in_group[i-1].surname))
+                    if input() == "exit":
+                        QuitApp()
+                    return
+                elif inp == 0:
                     return
                 else:
                     print("Wrong input. Try again")
-            except:
-                print("Wrong input. Try again")
+            except ValueError:
+                if inp == "":
+                    if AddUser():
+                        self.AddMember(list_users[-1])
+                        print("Added new user {} {} to group".format(list_users[-1].name, list_users[-1].surname))
+                        if input() == "exit":
+                            QuitApp()
+                        return
+                elif inp == "exit":
+                    QuitApp()
+                else:
+                    print("Wrong input. Try again")
     def SettleUpMenu(self):
         if len(self.members) == 0:
             print("There are no members in this group")
+            if input() == "exit":
+                QuitApp()
             return
         while True:
-            print("Type number of member to see detailed info and settle up his/her expense(s) or anything else to quit")
+            print("\n----------------------------------------------------------------")
+            print("Type number of member to see detailed info and settle up his/her expense(s) or \"0\" to return to group menu")
             for i in range(len(self.members)):
                 member = list(self.members)[i]
                 print("({}) {} {} - Balance: {}{}".format(i+1, member.name, member.surname, self.members[member], self.currency))
+            print("----------------------------------------------------------------")
             inp = input()
             try:
                 inp = int(inp)
                 if inp >= 1 and inp <= len(self.members):
                     member = list(self.members)[inp-1]
                     self.ShowBalanceMember(member)                 
-                    print(("Type \"1\" to settle up this member, \"0\" select another member or anything else to go back to group menu"))
+                    print(("Type \"1\" to settle up this member, \"2\" to select another member or \"0\" to go back to group menu"))
                     inp1 = input()
                     if inp1 == "0":
-                        continue
+                        return
                     elif inp1 == "1":
                         self.SettleUp(member)
+                    elif inp1 == "2":
+                        continue
+                    elif inp1 == "exit":
+                        QuitApp()
                     else:
-                        return
-                else:
+                        print("Wrong input. Try again.")
+                elif inp == 0:
                     return
-            except:
-                return
+                else:
+                    print("Wrong input. Try again.")
+            except ValueError:
+                if inp == "exit":
+                    QuitApp()
+                print("Wrong input. Try again.")
     def ShowBalanceMember(self, member):
         if self.calculation_type == "simplify":
             self.CalculateSimplifyMatrix()
@@ -354,11 +413,15 @@ class Group:
                         balance_negative -= value
                 if balance_positive == 0 and balance_negative == 0:
                     print("{} {} is settled".format(member.name, member.surname))
+                    if input() == "exit":
+                        QuitApp()
                     return
             else:
                 matrix = self.expense_simplify_matrix
                 if self.members[member] == 0:
                     print("{} {} is settled".format(member.name, member.surname))
+                    if input() == "exit":
+                        QuitApp()
                     return
             print("Choose member to settle up with or \"0\" to cancel action")
             index = list(self.members.keys()).index(member)
@@ -390,20 +453,29 @@ class Group:
                     self.AddExpense("Settlement", abs(value), self.currency, payer, members, "Settlement", "")         
                 else:
                     print("Wrong input. Try again")
-            except:
+            except ValueError:
+                if inp == "exit":
+                    QuitApp()
                 print("Wrong input. Try again")   
     def AddExpenseMenu(self):  
         if len(self.members) == 0:
             print("There are no members in group")
+            if input() == "exit":
+                QuitApp()
             return
         while True:
-            print("Follow instructions or type \"0\" at any point to cancel the action")
+            print("\n----------------------------------------------------------------")
+            print("Follow instructions or type \"0\" at any point to cancel adding expense")
             name = input("Name of expense: ")
             if name == "0":
                 return
+            elif name == "exit":
+                QuitApp()
             category = self.SelectCategory()
             if category == "0":
                 return
+            elif category == "exit":
+                QuitApp()
             value = self.SelectValue()
             if value == 0:
                 return
@@ -417,6 +489,8 @@ class Group:
             if type == "0":
                 return
             members = self.SplitingMenu(type, members, value)
+            if members == "0":
+                return
             while True:
                 print("Type \"1\" to confirm expense or \"2\" to enter it again")
                 print("{} - {} - {}{}".format(name, category, value, self.currency))
@@ -430,9 +504,14 @@ class Group:
                         return
                     case "1":
                         self.AddExpense(name, value, self.currency, payer, members, category, type)
+                        print("Expense added successfully")
+                        if input() == "exit":
+                            QuitApp()
                         return
                     case "2":
                         break
+                    case "exit":
+                        QuitApp()
                     case _:
                         print("Wrong input. Try again")
     def SelectCategory(self):
@@ -451,7 +530,9 @@ class Group:
                     return input("Category: ")
                 else:
                     print("Wrong input. Try again")
-            except:
+            except ValueError:
+                if inp == "exit":
+                    QuitApp()
                 print("Wrong input. Try again")
     def SelectValue(self):
         while True:
@@ -462,7 +543,9 @@ class Group:
                     print("Wrong input. Try again")
                 else:
                     return value
-            except:
+            except ValueError:
+                if value == "exit":
+                    QuitApp()
                 print("Wrong input. Try again")
     def SelectPayer(self):
         while True:
@@ -479,7 +562,9 @@ class Group:
                     return list(self.members)[inp-1]
                 else:
                     print("Wrong input. Try again")
-            except:
+            except ValueError:
+                if inp == "exit":
+                    QuitApp()
                 print("Wrong input. Try again")
     def SelectMembers(self):
         chosen_members = {mem:0 for mem in list(self.members)}
@@ -502,7 +587,7 @@ class Group:
                     chosen_members[list(self.members)[inp-1]] = abs(chosen_members[list(self.members)[inp-1]]-1)
                 else:
                     print("Wrong input. Try again")
-            except:
+            except ValueError:
                 if inp == "a":
                     if 0 in list(chosen_members.values()):
                         for chosen in chosen_members:
@@ -515,6 +600,8 @@ class Group:
                         print("Someone needs to be picked")
                     else:
                         return {user:0 for user in list(chosen_members) if chosen_members[user] == 1}
+                elif inp == "exit":
+                    QuitApp()
                 else:
                     print("Wrong input. Try again")
     def SelectType(self):
@@ -532,7 +619,9 @@ class Group:
                     return types[inp - 1]
                 else:
                     print("Wrong input. Try again")
-            except:
+            except ValueError:
+                if inp == "exit":
+                    QuitApp()
                 print("Wrong input. Try again")
     def SplitingMenu(self, type, members, value):
         match type:
@@ -545,9 +634,9 @@ class Group:
             case "unequally by shares":
                 return self.CalculateUnequallyShares(members, value)
     def CalculateEqually(self, members, value):
-        _value_by_person = round(value/len(members),2)
+        value_by_person = round(value/len(members),2)
         for mem in members:
-            members[mem] = _value_by_person
+            members[mem] = value_by_person
         if sum(members.values()) != value:
             members[list(self.members)[random.randint(0, len(members)-1)]] += round((value - sum(members.values())), 2)
         return members
@@ -574,17 +663,23 @@ class Group:
                                 break
                             else:
                                 print("Value must be greater than 0 and lower or equal to remaining amount")
-                        except:
+                        except ValueError:
+                            if inp1 == "exit":
+                                QuitApp()
                             print("Wrong input. Try again")
+                elif inp == 0:
+                    return "0"
                 else:
                     print("Wrong input. Try again")
-            except:
+            except ValueError:
                 if inp == "":
                     remaining = round(value - sum(members.values()),2)
                     if remaining == 0:
                         return members
                     else:
                         print("Remaining money to split")
+                elif inp == "exit":
+                    QuitApp()
                 else:
                     print("Wrong input. Try again")
     def CalculateUnequallyPercentage(self, members, value):
@@ -610,11 +705,15 @@ class Group:
                                 break
                             else:
                                 print("Value must be greater than 0 and lower or equal to remaining percentage")
-                        except:
+                        except ValueError:
+                            if inp1 == "exit":
+                                QuitApp()
                             print("Wrong input. Try again")
+                elif inp == 0:
+                    return "0"
                 else:
                     print("Wrong input. Try again")
-            except:
+            except ValueError:
                 if inp == "":
                     remaining = round((value - sum(percentage*value for percentage in members.values()))/value,4)*100
                     if remaining == 0:
@@ -625,6 +724,8 @@ class Group:
                         return members
                     else:
                         print("Remaining money to split")
+                elif inp == "exit":
+                    QuitApp()
                 else:
                     print("Wrong input. Try again")
     def CalculateUnequallyShares(self, members, value):
@@ -648,11 +749,15 @@ class Group:
                                 break
                             else:
                                 print("Value must be greater than 0")
-                        except:
+                        except ValueError:
+                            if inp1 == "exit":
+                                QuitApp()
                             print("Wrong input. Try again")
+                elif inp == 0:
+                    return "0"
                 else:
                     print("Wrong input. Try again")
-            except:
+            except ValueError:
                 if inp == "":
                     if 0 in members.values():
                         print("People without share remaining")
@@ -663,10 +768,13 @@ class Group:
                         if sum(members.values()) != value:
                             members[list(members)[random.randint(0, len(members)-1)]] += round((value - sum(members.values())), 2)
                         return members
+                elif inp == "exit":
+                    QuitApp()
                 else:
                     print("Wrong input. Try again")
     def SelectCurrency(self):
         while True:
+            print("\n----------------------------------------------------------------")
             print("Select currency:")
             print("(1) USD - $")
             print("(2) EUR - €")
@@ -678,6 +786,7 @@ class Group:
             print("(8) CAD")
             print("(9) CHF")
             print("(0) Other")
+            print("----------------------------------------------------------------")
             inp = input()
             try:
                 inp = int(inp)
@@ -710,11 +819,16 @@ class Group:
                         self.currency = "CHF"
                         return
                     case 0:
-                        self.currency = input("Type currency: ")
+                        currency_tmp = input("Type currency: ")
+                        if currency_tmp == "exit":
+                            QuitApp()
+                        self.currency = currency_tmp
                         return
                     case _:
                         print("Wrong input. Try again")
-            except:
+            except ValueError:
+                if inp == "exit":
+                    QuitApp()
                 print("Wrong input. Try again")
 class Expense:
     def __init__(self, name, value, currency, payer, members, category, type):
@@ -726,7 +840,7 @@ class Expense:
         self.category = category
         self.type = type
     def ShowExpense(self):
-        print("Type anything to exit")
+        print("\n----------------------------------------------------------------")
         if self.category == "Settlement":
             print("\"{}\"".format(self.name))
             print("{} {} paid {} {} {}{}".format(self.payer.name, self.payer.surname, list(self.members.keys())[0].name, list(self.members.keys())[0].surname, self.value, self.currency))
@@ -736,7 +850,9 @@ class Expense:
             print("{0} {1} paid {2}{3}".format(self.payer.name, self.payer.surname, self.value, self.currency))
             for member in self.members:
                 print("{0} {1} owes {2}{3}".format(member.name, member.surname, self.members[member], self.currency))
-        input()
+        print("----------------------------------------------------------------")
+        if input() == "exit":
+            QuitApp()
         return   
 class RepeatedTimer:
     def __init__(self, interval, function, *args, **kwargs):
@@ -760,114 +876,171 @@ class RepeatedTimer:
         self._timer.cancel()
         self.is_running = False
 
-def ShowGroups():
+def ShowGroupsOptions():
     while True:
-        print("Type according number to access group or do another action")
-        for i in range(len(list_groups)):
-            group = list_groups[i]
-            print("({0}) {1}".format(i, group.name))
-        print("(a) Add new group")
-        print("(d) Delete existing group")
-        print("(m) Exit to main manu")
-        print("(e) Exit app")
+        print("\n----------------------------------------------------------------")
+        print("(1) Show Existing Groups")
+        print("(2) Add new group")
+        print("(3) Delete existing group")
+        print("(0) Return to main manu")
+        print("----------------------------------------------------------------")
         inp = input()
-        try:
-            inp = int(inp)
-            if inp >= 0 and inp < len(list_groups):
-                list_groups[inp].ShowGroupInfo()
-        except:
-            if inp == "a":
-                name = input("Name of group: ")
-                Group(name)
-            elif inp == "d":
-                DeleteGroup()
-            elif inp == "m":
-                break
-            elif inp == "e":
-                saving_cycle.stop()
-                SaveToFile()
-                exit()
-            else:
-                print("Wrong input. Try again")
+        if inp == "1":
+            ShowGroups()
+        elif inp == "2":
+            name = input("Name of group: ")
+            if name == "exit":
+                QuitApp()
+            Group(name)
+            print("Group \"{}\" created".format(name))
+            if input() == "exit":
+                QuitApp()
+        elif inp == "3":
+            DeleteGroup()
+        elif inp == "0":
+            return
+        elif inp == "exit":
+            QuitApp()
+        else:
+            print("Wrong input. Try again")
+
+def ShowGroups():
+    if len(list_groups) == 0:
+        print("There are no existing groups.")
+        if input() == "exit":
+            QuitApp()
+        return
+    else:
+        while True:
+            print("\n----------------------------------------------------------------")
+            for i in range(len(list_groups)):
+                print("({}) {}".format(i+1, list_groups[i].name))
+            print("(0) Return to groups menu")
+            print("----------------------------------------------------------------")
+            inp = input()
+            try:
+                inp = int(inp)
+                if inp >= 1 and inp <= len(list_groups):
+                    list_groups[inp-1].ShowGroupInfo()
+                elif inp == 0:
+                    return
+                else:
+                    print("Wrong input. Try again")
+            except ValueError:
+                if inp == "exit":
+                    QuitApp()
+                print("Wrong input. Try again.")
 
 def DeleteGroup():
     if len(list_groups) == 0:
         print("No groups to delete")
+        if input() == "exit":
+            QuitApp()
         return
     while True:
+        print("\n----------------------------------------------------------------")
         print("Choose group to delete (if group is not settled expenses will be deleted)")
         for i in range(len(list_groups)):
             group = list_groups[i]
             if group.IsSettled():
-                print("({0}) {1}".format(i, group.name))
+                print("({0}) {1}".format(i+1, group.name))
             else:
-                print("({0}) {1} (group not settled)" .format(i, group.name))
-        print("(c) Cancel action")
+                print("({0}) {1} (group not settled)" .format(i+1, group.name))
+        print("(0) Cancel action")
+        print("----------------------------------------------------------------")
         inp = input()
         try:
             inp = int(inp)
-            if inp >= 0 and inp < len(list_groups):
-                group = list_groups.pop(inp)
+            if inp >= 1 and inp <= len(list_groups):
+                group = list_groups.pop(inp-1)
                 for mem in group.members:
                     mem.groups.remove(group)
                 print("Deleted group: \"{}\"".format(group.name))
                 del group
+                if input() == "exit":
+                    QuitApp()
                 return
-        except:
-            if inp == "c":
+            elif inp == 0:
                 return
-            else:
-                print("Wrong input. Try again")
+        except ValueError:
+            if inp == "exit":
+                QuitApp()
+            print("Wrong input. Try again")
+
+def ShowUsersOptions():
+    while True:
+        print("\n----------------------------------------------------------------")
+        print("(1) See specific information about existing users")
+        print("(2) Add new user")
+        print("(3) Delete existing settled user")
+        print("(0) Exit to main manu")
+        print("----------------------------------------------------------------")
+        inp = input()
+        match inp:
+            case "1":
+                ShowUsers()
+            case "2":
+                AddUser()
+                print("Added new user: {} {}".format(list_users[-1].name, list_users[-1].surname))
+                if input() == "exit()":
+                    QuitApp()
+            case "3":
+                DeleteUser()
+            case "0":
+                return
+            case "exit":
+                QuitApp()
+            case _:
+                print("Wrong input. Try again.")
 
 def ShowUsers():
-    while True:
-        print("Type according number to access specific information about user")
-        for i in range(len(list_users)):
-            user = list_users[i]
-            print("({0}) {1} {2}".format(i, user.name, user.surname))
-        print("(a) Add new user")
-        print("(d) Delete existing settled user")
-        print("(m) Exit to main manu")
-        print("(e) Exit app")
-        inp = input()
-        try:
-            inp = int(inp)
-            if inp >= 0 and inp < len(list_users):
-                list_users[inp].ShowInfo()       
-        except: 
-            if inp == "a":
-                AddUser()
-                continue
-            elif inp == "d":
-                DeleteUser()
-                continue
-            elif inp == "m":
-                break
-            elif inp == "e":
-                saving_cycle.stop()
-                SaveToFile()
-                exit()
-            else:
-                print("Wrong input. Try again")
+    print("\n----------------------------------------------------------------")
+    for i in range(len(list_users)):
+        user = list_users[i]
+        print("({}) {} {}".format(i+1, user.name, user.surname))
+    print("(0) Return to Users Menu")
+    print("----------------------------------------------------------------")
+    inp = input()
+    try:
+        inp = int(inp)
+        if inp >= 1 and inp <= len(list_users):
+            list_users[inp-1].ShowInfo()
+        elif inp == 0:
+            return
+        else:
+            print("Wrong input. Try again.")
+    except ValueError:
+        if inp == "exit":
+            QuitApp()
+        print("Wrong input. Try again.")
+
 
 def AddUser():
     while True:
-        print("To cancel adding a user type 0 at any stage")
+        print("To cancel whole action type \"0\" at any stage")
         name = input("Name: ")
         if name == "0":
             return False
+        elif name == "exit":
+            QuitApp()
         surname = input("Surname: ")
         if surname == "0":
             return False
+        elif surname == "exit":
+            QuitApp()
         username = input("Username: ")
         if username == "0":
             return False
+        elif username == "exit":
+            QuitApp()
         email = input("Email: ")
         if email == "0":
             return False
+        elif email == "exit":
+            QuitApp()
         print("Confirm data: {0} {1}, {2}, {3}".format(name, surname, username, email))
         while True:
-            inp = input("Type 1 if you want to confirm data, 2 if you want to enter it again or 0 if you want to cancel whole action: ")
+            inp = input("Type \"1\" if you want to confirm data, \"2\" if you want to enter it again or \"0\" if you want to cancel whole action: ")
             if inp == "1":
                 User(name, surname, username, email)
                 return True
@@ -875,12 +1048,16 @@ def AddUser():
                 break
             elif inp == "0":
                 return False
+            elif inp == "exit":
+                QuitApp()
             else:
                 print("Wrong input. Try again")
     
 def DeleteUser():
     if len(list_users) == 0:
         print("No users to delete")
+        if input() == "exit":
+            QuitApp()
         return
     while True:
         settled_users = []
@@ -890,25 +1067,34 @@ def DeleteUser():
                 settled_users.append(user)
         if len(settled_users) == 0:
             print("No settled users")
+            if input() == "exit":
+                QuitApp()
             return
+        print("\n----------------------------------------------------------------")
         print("Choose user to delete (showing only users settled in all groups): ")
         for i in range(len(settled_users)):
             user = settled_users[i]
-            print("({0}) {1} {2}".format(i, user.name, user.surname))
-        print("(c) Cancel action")
+            print("({0}) {1} {2}".format(i+1, user.name, user.surname))
+        print("(0) Cancel action")
+        print("----------------------------------------------------------------")
         inp = input()
         try:
             inp = int(inp)
-            if inp >= 0 and inp < len(settled_users):
-                user = list_users.pop(list_users.index(settled_users[inp]))
+            if inp >= 1 and inp <= len(settled_users):
+                user = list_users.pop(list_users.index(settled_users[inp-1]))
                 print("Deleted user: \"{0} {1}\"".format(user.name, user.surname))
                 del user
+                if input() == "exit":
+                    QuitApp()
                 return
-        except:
-            if inp == "c":
+            elif inp == 0:
                 return
             else:
                 print("Wrong input. Try again")
+        except ValueError:
+            if inp == "exit":
+                QuitApp()
+            print("Wrong input. Try again")
 
 def SaveToFile():
     with open("data.pkl", "wb") as file:
@@ -921,26 +1107,38 @@ def LoadFromFile():
         list_users = data[0]
         list_groups = data[1]
 
+def QuitApp():
+    saving_cycle.stop()
+    SaveToFile()
+    exit()
+
 list_groups = []
 list_users = []
 
+if os.path.isfile("data.pkl"):
+    LoadFromFile()
+saving_cycle = RepeatedTimer(5, SaveToFile)
+print("----------------------------------------------------------------")
+print("Type according numbers to select options.")
+print("At any point type exit to quit app.")
+print("Type anything to skip messages like this one.")
+print("----------------------------------------------------------------")
+if input() == "exit":
+    QuitApp()
 while True:
-    if os.path.isfile("data.pkl"):
-        LoadFromFile()
-    saving_cycle = RepeatedTimer(5, SaveToFile)
-    print("----------------------------------------------------------------")
-    print("Type according number")
-    print("(1) Show list of groups")
+    print("\n----------------------------------------------------------------")
+    print("(1) Show groups menu")
     print("(2) Show all users")
-    print("(3) Quit app")
+    print("(0) Quit app")
+    print("----------------------------------------------------------------")
     inp = input()
     if inp == "1":
-        ShowGroups()
+        ShowGroupsOptions()
     elif inp == "2":
-        ShowUsers()
-    elif inp == "3":
-        saving_cycle.stop()
-        SaveToFile()
-        exit()
+        ShowUsersOptions()
+    elif inp == "0":
+        QuitApp()
+    elif inp == "exit":
+        QuitApp()
     else:
         print("Wrong input. Try again")
