@@ -121,6 +121,8 @@ class Group:
                 return False
         return True
     def ShowGroupInfo(self):
+         for mem in self.members:
+            self.members[mem] = round(self.members[mem],2)
          while True:
             print("\n----------------------------------------------------------------")
             print("\"{}\"".format(self.name))
@@ -329,7 +331,7 @@ class Group:
     def ShowBalanceMember(self, member):
         if self.calculation_type == "simplify":
             self.CalculateSimplifyMatrix()
-            value = self.members[member]
+            value = round(self.members[member],2)
             if value == 0:
                 print("{} {} is settled".format(member.name, member.surname))
             elif value < 0:
@@ -342,6 +344,7 @@ class Group:
             balance_positive = 0
             balance_negative = 0
             for value in self.expense_matrix[list(self.members).index(member)]:
+                value = round(value,2)
                 if value > 0:
                     balance_positive += value
                 else:
@@ -394,7 +397,7 @@ class Group:
     def CalculateSimplifyBalance(self, member):
         index = list(self.members).index(member)
         for i in range(len(self.expense_simplify_matrix)):
-            value = self.expense_simplify_matrix[index][i]
+            value = round(self.expense_simplify_matrix[index][i],2)
             member2 = list(self.members)[i]
             if value > 0:
                 print("{} {} owes {}{} to {} {}".format(member2.name, member2.surname, value, self.currency, member.name, member.surname))
@@ -1013,7 +1016,6 @@ def ShowUsers():
         if inp == "exit":
             QuitApp()
         print("Wrong input. Try again.")
-
 
 def AddUser():
     while True:
